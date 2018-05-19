@@ -2,41 +2,53 @@ rng = MersenneTwister(1234)
 randarr = rand(rng,1000)
 using DataFrames
 
-iris = readtable("iris.csv")
+datada = readtable("HydrogenXS.csv")
+
+thresh = datada[3]./datada[2]
+sizeofdata = size(thresh)[1]
 
 
 posfor = 0
 collcount = 0
-ann = 0
+
 a = 0.0
-energy = 10.0
-N = 1e6
+energy = 1000
+currene = energy
+threshold = 0.0
+N = 1000
+i=1
 
 
 
-formation = 0.3
-elastic = 0.8
 
 
 
 
+for i in 1:N
 
-for i = 1:N
-
-    currene = energy
+    currene = energy -13.6+ 2*13.6/N*i
     while currene >= 6.8
         a = rand()
 
-        if a < formation
+
+        i=1
+        while datada[1][i]<currene
+            i=i+1
+            if i==382
+                break
+            end
+        end
+        threshold = thresh[i]
+
+
+
+
+        if a < threshold
             posfor=posfor +1
             break
-        elseif a < elastic
+        else
             collcount = collcount +1
             currene = currene -13.6
-        else
-            ann = ann +1
-            break
-
         end
     end
 end
@@ -46,8 +58,6 @@ println("\n\n\n\n\n\nThe results are:\n")
 println("Postronium formed:")
 print((posfor)/N*100)
 println("%")
-println("Annihalated:")
-print((ann)/N*100)
-println("%")
+
 println("Avearage number of collisions:")
 print((collcount)/N)
