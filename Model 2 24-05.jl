@@ -1,7 +1,7 @@
 
 
 using DataFrames #""" To read data from .csv files """
-
+using Distributions # To get random number from various distributions
 
 tic()#""" To calculate timing of the code """
 
