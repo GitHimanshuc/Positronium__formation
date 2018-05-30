@@ -5,8 +5,13 @@ using Distributions # To get random number from various distributions
 
 tic()#""" To calculate timing of the code """
 
-datada = readtable("HydrogenXS.csv")   #""" The name of the file containing the data, set the working directory accordingly """
+datada = readtable("HeliumXS.csv")   #""" The name of the file containing the data, set the working directory accordingly """
+MMM = 4
 
+#Astronomical data
+dens = 35*1e6    #particle per m^3           #density of ISM                     #right now it is CNM
+temp = 75   #in kelvin                    #temperature of ISM
+mm = 1/1835 #a ratio                      #ratio of mass of the positron and molecule/atom
 
 
 rng = MersenneTwister(124)   #""" fixing the seed for some unknown reason """
@@ -26,24 +31,20 @@ psthresh = datada[8][1]   #""" Positronium formation threshold """
 dirthresh = datada[8][2]   #""" Direct ionization threshold """
 exthresh = datada[8][3]   #""" Excitation threshold """
 
-#Astronomical data
-den = 35*1e6    #particle per m^3           #density of ISM                     #right now it is CNM
-temp = 75 #in kelvin                    #temperature of ISM
-mm = 1/2000 #a ratio                      #ratio of mass of the positron and molecule/atom
+
+
+# Varibles for time and distance measurements
+
+tempdist = 0.0
+temptime = 0.0
+avgdist = 0.0
+avgtime = 0.0
 
 #Defining quantities for future use
-vm = sqrt(temp*3*8.314*1000/1)     #velocity of molecules/atoms of the ISM in meters/second
-len = 1/(^(den,1/3))               #mean free path for positrons                ******************************************************Wrong
-em = 0.5*9.1e-31*vm^2/(1.6e-19)                #some weird energy to be used in the thermalization formula eV
-
-
-
-
-
 v0 = 0.0  #will store Initial velocity of the particle
-
-
-
+tm = 0.0 # will store the collision time
+dcurrene = 0.0
+tcurrene = 0.0
 
 
 
@@ -54,18 +55,28 @@ dirioncount = 0   #""" Counting total number of ionizations """
 othcount = 0   #""" There were cases where nothing happened, i.e. all the cross sections at that energy ended up being 0, but this will lead to an infinite loop as our medium is infinite for now. These cases were checked for and this variable keeps track of these events """
 
 a = 0.0   #""" Just a variable that will be used to temporarily store a randomly generated number """
-energy = 5000-100   #""" Initial energy """
+energy = 500   #""" Initial energy """
 currene = energy   #""" A temporary variable to store the current energy  """
 thresholdps = 0.0   #""" Positronium threshold """
 thresholdex = 0.0   #""" Excitation threshold """
 thresholddi = 0.0   #""" Direct ionization threshold """
-N = 400000  #""" Number of particles to be simulated """
+N = 2000  #""" Number of particles to be simulated """
 i=1   #""" Variable used in for loop/ redundant """
 
 
-#arrcurrene = rand(Normal(energy, sqrt(13.6*2)), N)    #""" This array stores the energy distribution """
 
-arrcurrene = rand(N)*energy
+
+
+
+vm = sqrt(temp*1*8.314*1000/MMM)     #velocity of molecules/atoms of the ISM in meters/second
+em = 0.5*MMM*1.67e-27*vm^2/(1.6e-19)                #some weird energy to be used in the thermalization formula eV
+arrcurrene = rand(Normal(energy/2, energy/10), N)    #""" This array stores the energy distribution """
+thresholdel = mean((1 .-(threshex[200:sizeofdata] + threshdi[200:sizeofdata] + threshps[200:sizeofdata])))*1e-20      #Averaged elastic scattering cross section in meters square
+varalpha = sqrt(mm)*(dens*thresholdel*vm)/(1+mm)^2
+
+#arrcurrene = rand(N)*energy
+
+
 
 for i in 1:N   #""" THE loop """
 
@@ -73,6 +84,14 @@ for i in 1:N   #""" THE loop """
 
     j = sizeofdata   #""" Stores the index in datada[2] of current energy of the positron  """
 
+    avgdist = (i-1)*avgdist/i + tempdist/i # Recursively calculating the average
+    avgtime = (i-1)*avgtime/i + temptime/i
+    temptime = 0.0
+    tempdist = 0.0
+    dcurrene = 0.0
+    tcurrene = currene
+
+    varbeta = acoth(sqrt((currene)/(em)))                           #Parameter to be used in the formula for thermalization, refer William C. Sauder
 
     while currene >= psthresh   #""" Simulates life of a particle """
 
@@ -92,18 +111,17 @@ for i in 1:N   #""" THE loop """
 
 
 
-        #  Model 1, at every loop current energy will be decreasd by the amount dictated by the formula.
+        #  Model 4, at every loop current energy will be decreasd by the amount dictated by the formula.
         # *********** The formula was derived using the assumption that cross section is independent of the velocity, but that is not the case here.
         # *********** Alternate approach could be to use average elatics cross section that will also make the code faster
 
-
-        v0 = sqrt((2*datada[1][j]*1.6e-19)/(9.1e-31))  #velocity in meter/second
+        #vm = abs(rand(Normal(0,sqrt(8.314*temp*1000/MMM))))
+        v0 = sqrt((2*currene*1.6e-19)/(9.1e-31))  #velocity in meter/second
         thresholdel = (1-(thresholdps + thresholddi + thresholdex))*datada[2][j]*1e-20      #The elastic scattering cross section in meters square
-        varalpha = sqrt(mm)*(den*thresholdel*vm)/(1+mm)^2
-        varbeta = acoth(sqrt((v0^2)/(vm^2)))                               #Parameters to be used in the formula for thermalization, refer William C. Sauder
-        currene = em*(coth(varbeta + varalpha*1/(den*thresholdel*v0)))^2
-
-
+        tm = 1/(dens*thresholdel*v0)
+        temptime =  temptime + tm
+        tempdist = tempdist + tm*v0
+        tcurrene = em*(coth(varbeta + varalpha*temptime))^2
 
 
 
@@ -112,16 +130,22 @@ for i in 1:N   #""" THE loop """
             break
         elseif a < (thresholdps + thresholddi)
             dirioncount = dirioncount + 1
-            currene = currene - dirthresh
+            dcurrene = dcurrene + dirthresh
         elseif a < (thresholdps + thresholddi + thresholdex)
             excount = excount + 1
-            currene = currene - exthresh
+            dcurrene = dcurrene + exthresh
         elseif (thresholdps + thresholddi + thresholdex) == 0
             othcount = othcount + 1
             break
         else
             collcount = collcount +1
         end
+
+
+
+        currene = tcurrene - dcurrene
+
+
     end
 end
 
@@ -134,10 +158,16 @@ println("Average direct ionization count is:")
 println((dirioncount)/N)
 println("Average number of excitations:")
 println((excount/N))
-println("Average number of others:")
-println((othcount/N))
 println("Avearage number of elastic collisions:")
 println((collcount)/N)
+println("Average distance travelled is:")
+print(avgdist/3.086e16)
+println(" Pc")
+println("Average time travelled for is:")
+print(avgtime/31536000)
+println(" Years")
+println("Average number of others:")
+println((othcount/N))
 
 
 toc()
