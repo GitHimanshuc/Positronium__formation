@@ -1,6 +1,6 @@
 using DataFrames
 using Distributions
-
+using Plots
 rng = MersenneTwister(1234)
 
 function simulate( energy = 5000.0, N = 10000; file::String ="Hydrogen", MMM::Int = 1 , dens::Float64 = 3.5e7, temp::Float64 = 75.0)
@@ -48,7 +48,7 @@ function simulate( energy = 5000.0, N = 10000; file::String ="Hydrogen", MMM::In
 
     #Defining quantities for future use
     v0 = 0.0  #will store Initial velocity of the particle
-    tm = 0.0 # will store the collision time
+    tempvar = 0.0 # will store the collision time or collision distance
      # temporary varibles that will be used to take into account the energy loss due to thermalization and due to other events
     dcurrene = 0.0  #
     tcurrene = 0.0
@@ -126,14 +126,25 @@ function simulate( energy = 5000.0, N = 10000; file::String ="Hydrogen", MMM::In
             #  Model 4, at every loop current energy will be decreasd by the amount dictated by the formula.
             # *********** The formula was derived using the assumption that cross section is independent of the velocity, but that is not the case here.
             # *********** Alternate approach could be to use average elatics cross section that will also make the code faster
-
-            #vm = abs(rand(Normal(0,sqrt(8.314*temp*1000/MMM))))
+"""
+            # The time estimate is used to get distance estimate
             v0 = sqrt((2*currene*1.6e-19)/(9.1e-31))  #velocity in meter/second
-            tm = 1/(dens*datada[2][j]*1e-20*v0)
-            temptime =  temptime + tm
-            tempdist = tempdist + tm*v0
+            tempvar = 1/(dens*datada[2][j]*1e-20*v0)
+            temptime =  temptime + tempvar
+            tempdist = tempdist + tempvar*v0
             tcurrene = em*(coth(varbeta + varalpha*temptime))^2
-
+"""
+            # distance estimate is used to get time estimate
+            """
+            Warning:
+            Do not use the same random number in tempvar and for checking the type of interaction
+            else the correlation will give an additional 2% positron formation.
+            """
+            v0 = sqrt((2*currene*1.6e-19)/(9.1e-31))  #velocity in meter/second
+            tempvar = -log(rand())/(datada[2][j]*1.0e-20*dens)  # The distance covered before the next interaction
+            tempdist = tempdist + tempvar
+            temptime = temptime + tempvar/v0
+            tcurrene = em*(coth(varbeta + varalpha*temptime))^2
 
 
             if a < thresholdps
@@ -189,11 +200,4 @@ end
 
 #simulate( energy = 5000.0, N = 10000; file::String ="Hydrogen", MMM::Int = 1 , dens::Float64 = 3.5e7, temp::Float64 = 75.0)
 
-@time simulate(5000.0 , 10000, file ="Helium", MMM = 4 , dens = 3.5e7, temp = 75.0)
-
-graphdata = Array{Float64}(49,2)
-
-for i in 1:49
-    graphdata[i,1]=5000.0 -100.0*i
-    graphdata[i,2]=simulate(5000.0 -100.0*i, 1000, file ="Hydrogen", MMM = 1 , dens = 3.5e7, temp = 75.0)
-end
+@time simulate(5000.0 , 100000, file ="Helium", MMM = 4 , dens = 3.5e7, temp = 75.0)
