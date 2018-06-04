@@ -66,7 +66,7 @@ function simulate( energy = 5000.0, N = 10000; file::String ="Hydrogen", MMM::In
     thresholdps = 0.0   #""" Positronium threshold """
     thresholdex = 0.0   #""" Excitation threshold """
     thresholddi = 0.0   #""" Direct ionization threshold """
-
+    fraction = 0.0 # Will be used to lineary extrapolate the values of current crosssections
 
 
 
@@ -115,19 +115,38 @@ function simulate( energy = 5000.0, N = 10000; file::String ="Hydrogen", MMM::In
                 j=j-1                      #""" Some improvements required """
             end
 
-
-
+            # Without extrapolation
+            ########################################################################################################
+            ########################################################################################################
             thresholdps = threshps[j]
-            thresholddi = threshdi[j]   #""" Storing the relevant cross sections in temporary variables """
+            thresholddi = threshdi[j]   #Storing the relevant cross sections in temporary variables
             thresholdex = threshex[j]
 
+            
+            # With extrapolation
+            ########################################################################################################
+            ########################################################################################################
+"""
+            #The simple linear extrapolation used below can break the code if j becomes 1.
+            #For the data I am working with this will not happen as the loop ends at much higher index.
 
+            fraction = (currene - datada[1][j-1])/(datada[1][j] - datada[1][j-1])
+
+
+            thresholdps = threshps[j-1] + (threshps[j]-threshps[j-1])*fraction
+            thresholddi = threshdi[j-1] + (threshdi[j]-threshdi[j-1])*fraction #Storing the relevant cross sections in temporary variables
+            thresholdex = threshex[j-1] + (threshex[j]-threshex[j-1])*fraction
+"""
 
             #  Model 4, at every loop current energy will be decreasd by the amount dictated by the formula.
             # *********** The formula was derived using the assumption that cross section is independent of the velocity, but that is not the case here.
-            # *********** Alternate approach could be to use average elatics cross section that will also make the code faster
-"""
+
+
+
             # The time estimate is used to get distance estimate
+            ########################################################################################################
+            ########################################################################################################
+"""
             v0 = sqrt((2*currene*1.6e-19)/(9.1e-31))  #velocity in meter/second
             tempvar = 1/(dens*datada[2][j]*1e-20*v0)
             temptime =  temptime + tempvar
@@ -135,11 +154,11 @@ function simulate( energy = 5000.0, N = 10000; file::String ="Hydrogen", MMM::In
             tcurrene = em*(coth(varbeta + varalpha*temptime))^2
 """
             # distance estimate is used to get time estimate
-            """
-            Warning:
-            Do not use the same random number in tempvar and for checking the type of interaction
-            else the correlation will give an additional 2% positron formation.
-            """
+
+
+            #Warning:
+            #Do not use the same random number in tempvar and for checking the type of interaction
+            #else the correlation will give an additional 2% positron formation.
             v0 = sqrt((2*currene*1.6e-19)/(9.1e-31))  #velocity in meter/second
             tempvar = -log(rand())/(datada[2][j]*1.0e-20*dens)  # The distance covered before the next interaction
             tempdist = tempdist + tempvar
