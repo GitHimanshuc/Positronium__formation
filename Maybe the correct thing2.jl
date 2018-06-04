@@ -82,7 +82,7 @@ function simulate( energy = 5000.0, N = 10000; file::String ="Hydrogen", MMM::In
 
 
     arrcurrene = rand(Normal(energy/2, energy/10), N)    #""" This array stores the energy distribution """
-    thresholdel = mean((1 .-(threshex[200:sizeofdata] + threshdi[200:sizeofdata] + threshps[200:sizeofdata])))*1e-20      #Averaged elastic scattering cross section in meters square
+    thresholdel = mean((1 -(threshex[200:sizeofdata] + threshdi[200:sizeofdata] + threshps[200:sizeofdata])).*normalization[200:sizeofdata])*1e-20      #Averaged elastic scattering cross section in meters square
     varalpha = sqrt(mm)*(dens*thresholdel*vm)/(1+mm)^2
 
     #arrcurrene = rand(N)*energy
@@ -122,7 +122,7 @@ function simulate( energy = 5000.0, N = 10000; file::String ="Hydrogen", MMM::In
             thresholddi = threshdi[j]   #Storing the relevant cross sections in temporary variables
             thresholdex = threshex[j]
 
-            
+
             # With extrapolation
             ########################################################################################################
             ########################################################################################################
@@ -219,4 +219,4 @@ end
 
 #simulate( energy = 5000.0, N = 10000; file::String ="Hydrogen", MMM::Int = 1 , dens::Float64 = 3.5e7, temp::Float64 = 75.0)
 
-@time simulate(5000.0 , 100000, file ="Helium", MMM = 4 , dens = 3.5e7, temp = 75.0)
+@time simulate(5000.0 , 10000, file ="Helium", MMM = 4 , dens = 3.5e7, temp = 75.0)
