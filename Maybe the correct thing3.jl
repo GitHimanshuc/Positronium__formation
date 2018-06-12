@@ -1,6 +1,13 @@
 using DataFrames
 using Distributions
 using Plots
+
+
+
+using OtherFunctions
+
+
+
 rng = MersenneTwister(1234)
 
 function simulate( energy = 5000.0, N = 10000; file::String ="Hydrogen", MMM::Int = 1 , dens::Float64 = 3.5e7, temp::Float64 = 75.0)
@@ -17,7 +24,7 @@ function simulate( energy = 5000.0, N = 10000; file::String ="Hydrogen", MMM::In
 
 
 
-    mm = 1/1835 #a ratio                      #ratio of mass of the positron and molecule/atom
+    mass_ratio = 1/1835 #a ratio                      #ratio of mass of the positron and molecule/atom
 
 
     rng = MersenneTwister(124)   #""" fixing the seed for some unknown reason """
@@ -87,11 +94,11 @@ function simulate( energy = 5000.0, N = 10000; file::String ="Hydrogen", MMM::In
     em = 0.5*MMM*1.67e-27*vm^2/(1.6e-19)                #some weird energy to be used in the thermalization formula (eV)
 
 
-    arrcurrene = rand(Normal(energy/2, energy/10), N)    #This array stores the energy distribution / The positron energy will be sampled form this array
+    arrcurrene = rand(Normal(energy, psthresh*2), N)    #This array stores the energy distribution / The positron energy will be sampled form this array
 
-
-    thresholdel = mean((1 -(threshex[200:sizeofdata] + threshdi[200:sizeofdata] + threshps[200:sizeofdata])).*normalization[200:sizeofdata])*1e-20      #Averaged elastic scattering cross section in meters square
-    varalpha = sqrt(mm)*(dens*thresholdel*vm)/(1+mm)^2  #Parameter to be used in the formula for thermalization, refer William C. Sauder
+    Elas = datada[2] - datada[3]-datada[4]-datada[5]-datada[6]
+    thresholdel = mean(Elas)*1e-20   #Averaged elastic scattering cross section in meters square
+    varalpha = sqrt(mass_ratio)*(dens*thresholdel*vm)/(1+mass_ratio)^2  #Parameter to be used in the formula for thermalization, refer William C. Sauder
 
     #arrcurrene = rand(N)*energy
 
@@ -103,7 +110,11 @@ function simulate( energy = 5000.0, N = 10000; file::String ="Hydrogen", MMM::In
 
         j = sizeofdata   #""" Stores the index in datada[2] of current energy of the positron  """
 
+        v0 = sqrt((2*currene*1.6e-19)/(9.1e-31))  #velocity in meter/second
+        varmax_time = 1e9
+        vartime_step = 1e5
 
+        vel_time = make_array2(dens , mass_ratio , vm , v0 , Elas , datada[1]; max_time = varmax_time , start_time= 0.0 , interporder = 1 , time_step = vartime_step)
 
         # Recursively calculating the average
         avgdist = (i-1)*avgdist/i + tempdist/i
@@ -117,6 +128,7 @@ function simulate( energy = 5000.0, N = 10000; file::String ="Hydrogen", MMM::In
 
 
         varbeta = acoth(sqrt((currene)/(em)))   #Parameter to be used in the formula for thermalization, refer William C. Sauder
+
 
 
         while currene >= psthresh   #""" Simulates life of a particle """
@@ -173,10 +185,16 @@ function simulate( energy = 5000.0, N = 10000; file::String ="Hydrogen", MMM::In
             #Do not use the same random number in tempvar and for checking the type of interaction
             #else the correlation will give an additional 2% positron formation.
             v0 = sqrt((2*currene*1.6e-19)/(9.1e-31))  #velocity in meter/second
+
             tempvar = -log(rand())/(datada[2][j]*1.0e-20*dens)  # The distance covered before the next interaction
             tempdist = tempdist + tempvar
             temptime = temptime + tempvar/v0
-            tcurrene = em*(coth(varbeta + varalpha*temptime))^2
+            #v0 = vel_time[floor(Int,temptime/varmax_time*length(vel_time))+1][1]
+            v0 = vel_time(temptime)[1]
+            tcurrene = .5 * 9.1e-31 * v0^2/1.6e-19
+
+            #tcurrene = em*(coth(varbeta + varalpha*temptime))^2
+
 
 
             if a < thresholdps
