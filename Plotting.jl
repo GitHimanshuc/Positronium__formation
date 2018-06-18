@@ -27,5 +27,5 @@ for i in (Int(vardensity/2)+1):Int(vardensity)
     graphdata[i,1]= nextener -step2*(i-Int(vardensity/2))
     graphdata[i,2]= simulate(nextener -step2*(i-Int(vardensity/2)), varnumber, file = vfile, MMM = vMMM, dens = vdens, temp = vtemp)
 end
-plot(graphdata[1:Int(vardensity),1],graphdata[1:Int(vardensity),2],size=(1200,700),label = file,xlabel="Mean Energy (eV)",ylabel="Percentage Positronium Formed",title="Percentage Positronium formation vs Mean Energy(Normal Distribution with Std. deviation = Mean Energy/5)",shape=:circle)
+plot(graphdata[1:Int(vardensity),1],graphdata[1:Int(vardensity),2],size=(1200,700),label = vfile,xlabel="Mean Energy (eV)",ylabel="Percentage Positronium Formed",title="Percentage Positronium formation vs Mean Energy(Normal Distribution with Std. deviation = Mean Energy/5)",shape=:circle)
 savefig("VariationHydrogen.png")
