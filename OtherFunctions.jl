@@ -3,6 +3,10 @@ module OtherFunctions
 
 export make_array
 export make_array2
+export final_scattering_angle!
+export surge_exp
+export surge_poly
+
 
 using DifferentialEquations
 using Dierckx
@@ -78,6 +82,40 @@ function make_array2(dens , mass_ratio , avg_vel_ism , initial_vel , Elas , Ener
 
 
 end
+
+function final_scattering_angle!(sigma ,theta, phi)
+    u=sigma[1]
+    v=sigma[2]
+    w=sigma[3]
+
+    s = sqrt(1-w*w)
+    sigma[1] = ((u*w)*cos(phi) - v*sin(phi))*sin(theta)/s + u*cos(theta)
+    sigma[2] = ((v*w)*cos(phi) + u*sin(phi))*sin(theta)/s + v*cos(theta)
+    sigma[3] =  -s*(sin(theta)*cos(phi)) + w*cos(theta)
+
+
+end
+
+
+function surge_exp(x,xth,varlambda)
+
+    if x < xth
+        return 0.0
+    else
+        return (exp(1)/varlambda*(x-xth)*exp(-(x-xth)/varlambda))
+    end
+end
+
+function surge_poly(x,xth,varlambda)
+
+    if x < xth
+        return 0.0
+    else
+        return (4*varlambda*(x-xth)/(x-xth+varlambda)^2)
+    end
+end
+
+
 
 
 end

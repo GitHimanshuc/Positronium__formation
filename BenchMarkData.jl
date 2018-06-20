@@ -9,15 +9,33 @@ using OtherFunctions
 
 rng = MersenneTwister(1234)
 
-function simulate( energy = 5000.0, N = 10000; file::String ="Hydrogen", MMM::Int = 1 , dens::Float64 = 3.5e7, temp::Float64 = 75.0)
+function simulate( energy = 5000.0, N = 10000, para = rand(10); MMM::Int = 1 , dens::Float64 = 3.5e7, temp::Float64 = 75.0, Q::Float64 = 1.0)
 
 
 
-    filename = joinpath("C:\\Users\\Himanshu\\Desktop\\Julia\\Base code for positron transport",file*"XS.csv")
-    datada = readtable(filename)   #""" The name of the file containing the data, set the working directory accordingly """
+    elas = para[1]   #Armstrong squared
+    Aion = para[2]
+    eion = para[3]
+    lion = para[4]
+    Apsf = para[5]
+    epsf = para[6]
+    lpsf = para[7]
+    Aexh = para[8]
+    eexh = para[9]
+    lexh = para[10]
+
+
+    Q = Q*1.0  # Energy share fraction with electron during ionization
+    #Not included as of now because at a time we only work with either high energy or low energy excitations
+    Aexl = 0.0
+    eexl = eexh
+    lexl = 1
+
+
+
+
     println("------------------------------------------------------------------------")
     #Astronomical data
-    println("\n\nThe ISM medium is : ",file)
     println("The density of ISM is : ",dens," Particles per meter cubed")  #particle per m^3           #density of ISM                     #right now it is CNM
     println("The temperature of ISM is : ",temp," Kelvin")   #in kelvin                    #temperature of ISM
 
@@ -28,21 +46,19 @@ function simulate( energy = 5000.0, N = 10000; file::String ="Hydrogen", MMM::In
 
     rng = MersenneTwister(124)   #""" fixing the seed for some unknown reason """
 
-    normalization = datada[2]   #""" Introduced so that overall normalization can be changed for all in one go """
-    threshps = datada[3]./normalization   #""" Positronium formation cross section """
-    threshdi = datada[4]./normalization   #""" Direct ionization cross section """
-    threshex = datada[6]./normalization  # """ Excitation cross section """
 
-    sizeofdata = length(threshps)    #""" Just calculating the size of the above defined arrays for future use/ Required do not change """
+
+
+
 
 
     #Every energy data unless stated otherwise is in eV
 
 
 
-    psthresh = datada[8][1]   #""" Positronium formation threshold """
-    dirthresh = datada[8][2]   #""" Direct ionization threshold """
-    exthresh = datada[8][3]   #""" Excitation threshold """
+    psthresh = 6.8   #""" Positronium formation threshold """
+    dirthresh = 13.6   #""" Direct ionization threshold """
+    exthresh = 10.2   #""" Excitation threshold """
 
 
 
@@ -76,7 +92,6 @@ function simulate( energy = 5000.0, N = 10000; file::String ="Hydrogen", MMM::In
     thresholddi = 0.0   #""" Direct ionization threshold """
 
 
-    fraction = 0.0 # Will be used to lineary extrapolate the values of current crosssections
 
 
 
@@ -114,7 +129,6 @@ function simulate( energy = 5000.0, N = 10000; file::String ="Hydrogen", MMM::In
         currene = arrcurrene[i]   #""" A value of energy choosen from the distribution """
         sigma = arrinitial_sigma[i,:]  # A value of initial velocity is choosen
 
-        j = sizeofdata   #""" Stores the index in datada[2] of current energy of the positron  """
 
 
         # Recursively calculating the average and storing information
@@ -126,54 +140,22 @@ function simulate( energy = 5000.0, N = 10000; file::String ="Hydrogen", MMM::In
         varposition_vector = [.0,.0,.0]
 
 
-        while currene >= psthresh*0   #""" Simulates life of a particle """
+        while currene >= psthresh   #""" Simulates life of a particle """
 
 
-            a = rand()   #""" Random number to be used in simulation """
 
 
-            while datada[1][j]>currene   #""" Finds the index corresponding to the current energy/////"""
-                j=j-1                      #""" Some improvements required """
-            end
 
             # Without extrapolation
             ########################################################################################################
             ########################################################################################################
-            thresholdps = threshps[j]
-            thresholddi = threshdi[j]   #Storing the relevant cross sections in temporary variables
-            thresholdex = threshex[j]
-
-
-            # With extrapolation
-            ########################################################################################################
-            ########################################################################################################
-"""
-            #The simple linear extrapolation used below can break the code if j becomes 1.
-            #For the data I am working with this will not happen as the loop ends at much higher index.
-
-            fraction = (currene - datada[1][j-1])/(datada[1][j] - datada[1][j-1])
-
-
-            thresholdps = threshps[j-1] + (threshps[j]-threshps[j-1])*fraction
-            thresholddi = threshdi[j-1] + (threshdi[j]-threshdi[j-1])*fraction #Storing the relevant cross sections in temporary variables
-            thresholdex = threshex[j-1] + (threshex[j]-threshex[j-1])*fraction
-"""
-
-            # *********** The formula was derived using the assumption that cross section is independent of the velocity, but that is not the case here.
-
-
-
-            # The time estimate is used to get distance estimate
-            ########################################################################################################
-            ########################################################################################################
-"""
-            v0 = sqrt((2*currene*1.6e-19)/(9.1e-31))  #velocity in meter/second
-            tempvar = 1/(dens*datada[2][j]*1e-20*v0)
-            temptime =  temptime + tempvar
-            tempdist = tempdist + tempvar*v0
-            tcurrene = em*(coth(varbeta + varalpha*temptime))^2
-"""
-            # distance estimate is used to get time estimate
+            thresholdps = Apsf*surge_exp(currene,epsf,lpsf)
+            thresholddi = Aion*surge_poly(currene,eion,lion)   #Storing the relevant cross sections in temporary variables
+            thresholdex = Aexh*surge_exp(currene,eexh,lexh)
+            elas = elas
+            a = rand()   #""" Random number to be used in simulation """
+            total_cross = elas + thresholdps + thresholddi + thresholdex
+            a = a*total_cross # Normalizing
 
 
             #Warning:
@@ -181,12 +163,16 @@ function simulate( energy = 5000.0, N = 10000; file::String ="Hydrogen", MMM::In
             #else the correlation will give an additional 2% positron formation.
             v0 = sqrt((2*currene*1.6e-19)/(9.1e-31))  #velocity in meter/second
 
-            tempvar = -log(rand())/(datada[2][j]*1.0e-20*dens)  # The distance covered before the next interaction
+            tempvar = -log(rand())/(total_cross*dens*1e-20)  # The distance covered before the next interaction
             varposition_vector = varposition_vector+sigma*tempvar
 
             temptime = temptime + tempvar/v0
 
             final_scattering_angle!(sigma , asin((2*rand()-1)), 2*pi*rand()) # Right now we are using the isotropic scattering case.
+
+
+
+
 
             if a < thresholdps
                 posfor = posfor + 1
@@ -194,15 +180,14 @@ function simulate( energy = 5000.0, N = 10000; file::String ="Hydrogen", MMM::In
             elseif a < (thresholdps + thresholddi)
                 dirioncount = dirioncount + 1
                 currene = currene - dirthresh
+                currene = Q*currene           # The fraction of energy shared with the emitted electron
             elseif a < (thresholdps + thresholddi + thresholdex)
                 excount = excount + 1
                 currene = currene - exthresh
-            elseif (thresholdps + thresholddi + thresholdex) == 0
-                othcount = othcount + 1
-                break
             else
                 collcount = collcount + 1
                 currene = currene*(1-2*varratio*(1 - em/currene))
+
 
 """
                 if (1-2*varratio*(1 - em/currene))>1
@@ -238,7 +223,6 @@ function simulate( energy = 5000.0, N = 10000; file::String ="Hydrogen", MMM::In
     println("Average number of others:")
     println((othcount/N),"\n\n")
     (posfor)/N*100
-    position_vector
 end
 
 
@@ -246,9 +230,11 @@ end
 
 # Calling the function
 
-#simulate( energy = 5000.0, N = 10000; file::String ="Hydrogen", MMM::Int = 1 , dens::Float64 = 3.5e7, temp::Float64 = 75.0)
+#simulate( energy = 5000.0, N = 10000;, MMM::Int = 1 , dens::Float64 = 3.5e7, temp::Float64 = 75.0)
 
-@time a=simulate(5000.0 , 100000, file ="Helium", MMM = 4 , dens = 3.5e7, temp = 75.0)
+
+
+#@time a=simulate(5000.0 , 5000, MMM = 1 , dens = 3.5e7, temp = 75.0)
 
 
 
@@ -258,3 +244,39 @@ scatter3d(a[1:points,2],a[1:points,1],a[1:points,3])
 writedlm("data.txt",a)
 
 """
+
+
+#para = [elas, Aion, eion, lion, Apsf, epsf, lpsf, Aexh, eexh, lexh]
+
+paraA8 = [1.0,1/3,15.0,5.0,1.0,10.0,1.0,1/3,8.0,1.0]
+paraA10 = [1.0,1/3,15.0,5.0,1.0,10.0,1.0,1/3,10.0,1.0]
+paraA12 = [1.0,1/3,15.0,5.0,1.0,10.0,1.0,1/3,13.0,1.0]
+paraB6 = [1.0,1/3,15.0,5.0,1.0,10.0,1.0,1/6,2.0,1.0]
+paraB3 = [1.0,1/3,15.0,5.0,1.0,10.0,1.0,1/3,2.0,1.0]
+paraB1 = [1.0,1/3,15.0,5.0,1.0,10.0,1.0,1.0,2.0,1.0]
+paraC6 = [1.0,1/6,10.0,5.0,1.0,10.0,1.0,0.0,8.0,1.0]
+paraC3 = [1.0,1/3,10.0,5.0,1.0,10.0,1.0,0.0,8.0,1.0]
+paraC1 = [1.0,1.0,10.0,5.0,1.0,10.0,1.0,0.0,8.0,1.0]
+
+psformation = Array{Float64}(9) # To store ps formation percentage
+
+q = 1.0
+particles = 50000
+varenergy = 50000.0
+vardensity = 3.5e7
+vartemp = 75.0
+
+
+@time psformation[1]=simulate(varenergy , particles, paraA8, MMM = 1 , dens = vardensity, temp = vartemp, Q=q)
+@time psformation[2]=simulate(varenergy , particles, paraA10, MMM = 1 , dens = vardensity, temp = vartemp, Q=q)
+@time psformation[3]=simulate(varenergy , particles, paraA12, MMM = 1 , dens = vardensity, temp = vartemp, Q=q)
+@time psformation[4]=simulate(varenergy , particles, paraB6, MMM = 1 , dens = vardensity, temp = vartemp, Q=q)
+@time psformation[5]=simulate(varenergy , particles, paraB3, MMM = 1 , dens = vardensity, temp = vartemp, Q=q)
+@time psformation[6]=simulate(varenergy , particles, paraB1, MMM = 1 , dens = vardensity, temp = vartemp, Q=q)
+@time psformation[7]=simulate(varenergy , particles, paraC6, MMM = 1 , dens = vardensity, temp = vartemp, Q=q)
+@time psformation[8]=simulate(varenergy , particles, paraC3, MMM = 1 , dens = vardensity, temp = vartemp, Q=q)
+@time psformation[9]=simulate(varenergy , particles, paraC1, MMM = 1 , dens = vardensity, temp = vartemp, Q=q)
+
+
+
+println(psformation)
