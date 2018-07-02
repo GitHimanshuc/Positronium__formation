@@ -1,6 +1,6 @@
 using DataFrames
 using Distributions
-
+using Plots
 rng = MersenneTwister(1234)
 
 function simulate( energy = 5000.0, N = 10000; file::String ="Hydrogen", MMM::Int = 1 , dens::Float64 = 3.5e7, temp::Float64 = 75.0)
@@ -22,7 +22,7 @@ function simulate( energy = 5000.0, N = 10000; file::String ="Hydrogen", MMM::In
 
     rng = MersenneTwister(124)   #""" fixing the seed for some unknown reason """
 
-    normalization = datada[2]   #""" Introduced so that overall normalization can be changed for all in one go """   """ This contains the total cross section """
+    normalization = datada[2]   #""" Introduced so that overall normalization can be changed for all in one go """
     threshps = datada[3]./normalization   #""" Positronium formation cross section """
     threshdi = datada[4]./normalization   #""" Direct ionization cross section """
     threshex = datada[6]./normalization  # """ Excitation cross section """
@@ -48,25 +48,31 @@ function simulate( energy = 5000.0, N = 10000; file::String ="Hydrogen", MMM::In
 
     #Defining quantities for future use
     v0 = 0.0  #will store Initial velocity of the particle
-    tm = 0.0 # will store the collision time
+    tempvar = 0.0 # will store the collision time or collision distance
+
+
      # temporary varibles that will be used to take into account the energy loss due to thermalization and due to other events
-    dcurrene = 0.0  #
-    tcurrene = 0.0
+    dcurrene = 0.0  # Will keep track of change in energy due to non-thermalization processos
+    tcurrene = 0.0  # Will keep track of continuous energy change due to thermalization
 
 
 
     posfor = 0   #""" To count the number of positroniums formed """
     collcount = 0   #""" Number of collision, will be divided by the number of particles to get the average number of collisions """
-    excount = 0   #""" Same as before, counting total number of excitations """
+    excount = 0   #"""counting total number of excitations """
     dirioncount = 0   #""" Counting total number of ionizations """
     othcount = 0   #""" There were cases where nothing happened, i.e. all the cross sections at that energy ended up being 0, but this will lead to an infinite loop as our medium is infinite for now. These cases were checked for and this variable keeps track of these events """
 
     a = 0.0   #""" Just a variable that will be used to temporarily store a randomly generated number """
     currene = energy   #""" A temporary variable to store the current energy  """
+
+
     thresholdps = 0.0   #""" Positronium threshold """
     thresholdex = 0.0   #""" Excitation threshold """
     thresholddi = 0.0   #""" Direct ionization threshold """
 
+
+    fraction = 0.0 # Will be used to lineary extrapolate the values of current crosssections
 
 
 
@@ -77,13 +83,15 @@ function simulate( energy = 5000.0, N = 10000; file::String ="Hydrogen", MMM::In
 
 
 
-    vm = sqrt(temp*1*8.314*1000/MMM)     #velocity of molecules/atoms of the ISM in meters/second
-    em = 0.5*MMM*1.67e-27*vm^2/(1.6e-19)                #some weird energy to be used in the thermalization formula eV
+    vm = sqrt(temp*1*8.314*1000/MMM)     #velocity of molecules/atoms of the ISM in meters/second   (Change according to the dimension the simulation is running in)
+    em = 0.5*MMM*1.67e-27*vm^2/(1.6e-19)                #some weird energy to be used in the thermalization formula (eV)
 
 
-    arrcurrene = rand(Normal(energy/2, energy/10), N)    #""" This array stores the energy distribution """
-    thresholdel = mean((1 .-(threshex[200:sizeofdata] + threshdi[200:sizeofdata] + threshps[200:sizeofdata])))*1e-20      #Averaged elastic scattering cross section in meters square
-    varalpha = sqrt(mm)*(dens*thresholdel*vm)/(1+mm)^2
+    arrcurrene = rand(Normal(energy/2, energy/10), N)    #This array stores the energy distribution / The positron energy will be sampled form this array
+
+
+    thresholdel = mean((1 -(threshex[200:sizeofdata] + threshdi[200:sizeofdata] + threshps[200:sizeofdata])).*normalization[200:sizeofdata])*1e-20      #Averaged elastic scattering cross section in meters square
+    varalpha = sqrt(mm)*(dens*thresholdel*vm)/(1+mm)^2  #Parameter to be used in the formula for thermalization, refer William C. Sauder
 
     #arrcurrene = rand(N)*energy
 
@@ -95,12 +103,18 @@ function simulate( energy = 5000.0, N = 10000; file::String ="Hydrogen", MMM::In
 
         j = sizeofdata   #""" Stores the index in datada[2] of current energy of the positron  """
 
-        avgdist = (i-1)*avgdist/i + tempdist/i # Recursively calculating the average
+
+
+        # Recursively calculating the average
+        avgdist = (i-1)*avgdist/i + tempdist/i
         avgtime = (i-1)*avgtime/i + temptime/i
         temptime = 0.0
         tempdist = 0.0
+
+
         dcurrene = 0.0
         tcurrene = currene
+
 
         varbeta = acoth(sqrt((currene)/(em)))   #Parameter to be used in the formula for thermalization, refer William C. Sauder
 
@@ -115,25 +129,54 @@ function simulate( energy = 5000.0, N = 10000; file::String ="Hydrogen", MMM::In
                 j=j-1                      #""" Some improvements required """
             end
 
-
-
+            # Without extrapolation
+            ########################################################################################################
+            ########################################################################################################
             thresholdps = threshps[j]
-            thresholddi = threshdi[j]   #""" Storing the relevant cross sections in temporary variables """
+            thresholddi = threshdi[j]   #Storing the relevant cross sections in temporary variables
             thresholdex = threshex[j]
 
 
+            # With extrapolation
+            ########################################################################################################
+            ########################################################################################################
+"""
+            #The simple linear extrapolation used below can break the code if j becomes 1.
+            #For the data I am working with this will not happen as the loop ends at much higher index.
 
-            #  Model 4, at every loop current energy will be decreasd by the amount dictated by the formula.
+            fraction = (currene - datada[1][j-1])/(datada[1][j] - datada[1][j-1])
+
+
+            thresholdps = threshps[j-1] + (threshps[j]-threshps[j-1])*fraction
+            thresholddi = threshdi[j-1] + (threshdi[j]-threshdi[j-1])*fraction #Storing the relevant cross sections in temporary variables
+            thresholdex = threshex[j-1] + (threshex[j]-threshex[j-1])*fraction
+"""
+
             # *********** The formula was derived using the assumption that cross section is independent of the velocity, but that is not the case here.
-            # *********** Alternate approach could be to use average elatics cross section that will also make the code faster
 
-            #vm = abs(rand(Normal(0,sqrt(8.314*temp*1000/MMM))))
+
+
+            # The time estimate is used to get distance estimate
+            ########################################################################################################
+            ########################################################################################################
+"""
             v0 = sqrt((2*currene*1.6e-19)/(9.1e-31))  #velocity in meter/second
-            tm = 1/(dens*datada[2][j]*1e-20*v0)
-            temptime =  temptime + tm
-            tempdist = tempdist + tm*v0
+            tempvar = 1/(dens*datada[2][j]*1e-20*v0)
+            temptime =  temptime + tempvar
+            tempdist = tempdist + tempvar*v0
             tcurrene = em*(coth(varbeta + varalpha*temptime))^2
+"""
+            # distance estimate is used to get time estimate
 
+
+            #Warning:
+            #Do not use the same random number in tempvar and for checking the type of interaction
+            #else the correlation will give an additional 2% positron formation.
+            v0 = sqrt((2*currene*1.6e-19)/(9.1e-31))  #velocity in meter/second
+            tempvar = -log(rand())/(datada[2][j]*1.0e-20*dens)  # The distance covered before the next interaction
+            tempdist = tempdist + tempvar
+            temptime = temptime + tempvar/v0
+            tcurrene = em*(coth(varbeta + varalpha*temptime))^2
 
 
             if a < thresholdps
@@ -190,10 +233,3 @@ end
 #simulate( energy = 5000.0, N = 10000; file::String ="Hydrogen", MMM::Int = 1 , dens::Float64 = 3.5e7, temp::Float64 = 75.0)
 
 @time simulate(5000.0 , 10000, file ="Helium", MMM = 4 , dens = 3.5e7, temp = 75.0)
-
-graphdata = Array{Float64}(49,2)
-
-for i in 1:49
-    graphdata[i,1]=5000.0 -100.0*i
-    graphdata[i,2]=simulate(5000.0 -100.0*i, 1000, file ="Hydrogen", MMM = 1 , dens = 3.5e7, temp = 75.0)
-end
