@@ -1,3 +1,8 @@
+using Plots
+using OtherFunctions
+
+
+
 
 vardensity  = 90
 varnumber = 10000
@@ -29,3 +34,54 @@ for i in (Int(vardensity/2)+1):Int(vardensity)
 end
 plot(graphdata[1:Int(vardensity),1],graphdata[1:Int(vardensity),2],size=(1200,700),label = vfile,xlabel="Mean Energy (eV)",ylabel="Percentage Positronium Formed",title="Percentage Positronium formation vs Mean Energy(Normal Distribution with Std. deviation = Mean Energy/5)",shape=:circle)
 savefig("VariationHydrogen.png")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#########################################################################################################################################
+#########################################################################################################################################
+#########################################################################################################################################
+
+
+using Plots
+using OtherFunctions
+
+
+elas = 1.0   #Armstrong squared
+Aion = .33
+eion = 15.0
+lion = 5.0
+Apsf = 1.0
+epsf = 10.0
+lpsf = 1.0
+Aexh = .33
+eexh = 8.0
+lexh = 1.0
+
+x_max = 3000.0
+
+currene = collect(20:.1:x_max)
+
+thresholdps = Apsf*surge_exp.(currene,epsf,lpsf)
+thresholddi = Aion*surge_poly.(currene,eion,lion)   #Storing the relevant cross sections in temporary variables
+thresholdex = Aexh*surge_exp.(currene,eexh,lexh)
+elass = rand(length(currene))
+elass[:] = elas
+atotal=rand(length(currene))
+atotal[:] = elas + thresholdps + thresholddi + thresholdex
+
+plot(currene,thresholdps,label="PS",xlabel = "Energy(eV)")
+plot!(currene,thresholddi,label="ION")
+plot!(currene,thresholdex,label="EX")
+plot!(currene,elass,label="ELAS")
+plot!(currene,atotal,label="TOT")

@@ -164,8 +164,9 @@ function simulate( energy = 5000.0, N = 10000, para = rand(10); MMM::Int = 1 , d
             v0 = sqrt((2*currene*1.6e-19)/(9.1e-31))  #velocity in meter/second
 
             tempvar = -log(rand())/(total_cross*dens*1e-20)  # The distance covered before the next interaction
-            varposition_vector = varposition_vector+sigma*tempvar
 
+            varposition_vector = varposition_vector+sigma*tempvar
+            ########################################################################################################################
             temptime = temptime + tempvar/v0
 
             final_scattering_angle!(sigma , asin((2*rand()-1)), 2*pi*rand()) # Right now we are using the isotropic scattering case.
@@ -188,10 +189,9 @@ function simulate( energy = 5000.0, N = 10000, para = rand(10); MMM::Int = 1 , d
                 collcount = collcount + 1
                 currene = currene*(1-2*varratio*(1 - em/currene))
 
-
 """
-                if (1-2*varratio*(1 - em/currene))>1
-                    println("gain   ", -currene*(2*varratio*(1 - em/currene)))
+                if (1-2*varratio*(1 - em/currene))<1
+                    println(currene, "  gained   ", -currene*(2*varratio*(1 - em/currene)))
                 end
 """
             end
@@ -258,11 +258,12 @@ paraC6 = [1.0,1/6,10.0,5.0,1.0,10.0,1.0,0.0,8.0,1.0]
 paraC3 = [1.0,1/3,10.0,5.0,1.0,10.0,1.0,0.0,8.0,1.0]
 paraC1 = [1.0,1.0,10.0,5.0,1.0,10.0,1.0,0.0,8.0,1.0]
 
+
 psformation = Array{Float64}(9) # To store ps formation percentage
 
 q = 1.0
-particles = 50000
-varenergy = 50000.0
+particles = 5000
+varenergy = 1e4
 vardensity = 3.5e7
 vartemp = 75.0
 
