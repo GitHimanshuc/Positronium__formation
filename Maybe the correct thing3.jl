@@ -73,7 +73,7 @@ function simulate( energy = 5000.0, N = 10000; file::String ="Hydrogen", MMM::In
     a = 0.0   #""" Just a variable that will be used to temporarily store a randomly generated number """
     currene = energy   #""" A temporary variable to store the current energy  """
 
-
+    # Just adding comments to check
     thresholdps = 0.0   #""" Positronium threshold """
     thresholdex = 0.0   #""" Excitation threshold """
     thresholddi = 0.0   #""" Direct ionization threshold """
