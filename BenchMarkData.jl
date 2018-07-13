@@ -120,6 +120,7 @@ function simulate( energy = 5000.0, N = 10000, para = rand(10); MMM::Int = 1 , d
     position_vector = Array{Float64}(N,3) # Will be used to hold the final 3D position of the positrons before annhilation
     varposition_vector = [.0,.0,.0] # Will hold the current position vector because I am not sure if accesing array every time inside the while loop is efficient
 
+    return_value_of_function = rand(4)
     #arrcurrene = rand(N)*energy
 
 
@@ -140,6 +141,13 @@ function simulate( energy = 5000.0, N = 10000, para = rand(10); MMM::Int = 1 , d
         varposition_vector = [.0,.0,.0]
 
 
+        return_value_of_function = bring_down_the_energy!(currene , dens  , temp  , sigma  , varposition_vector  , para, Q )
+
+        currene = return_value_of_function[1]
+        temptime = return_value_of_function[2]
+        dirioncount = dirioncount + return_value_of_function[4]
+        collcount = collcount + return_value_of_function[3]
+
         while currene >= psthresh   #""" Simulates life of a particle """
 
 
@@ -152,7 +160,7 @@ function simulate( energy = 5000.0, N = 10000, para = rand(10); MMM::Int = 1 , d
             thresholdps = Apsf*surge_exp(currene,epsf,lpsf)
             thresholddi = Aion*surge_poly(currene,eion,lion)   #Storing the relevant cross sections in temporary variables
             thresholdex = Aexh*surge_exp(currene,eexh,lexh)
-            elas = elas
+            elas = elastic_cross_section(currene , 200.0, 0.8 , 25.0 , 0.7)
             a = rand()   #""" Random number to be used in simulation """
             total_cross = elas + thresholdps + thresholddi + thresholdex
             a = a*total_cross # Normalizing
@@ -267,7 +275,7 @@ varenergy = 1e4
 vardensity = 3.5e7
 vartemp = 75.0
 
-
+"""
 @time psformation[1]=simulate(varenergy , particles, paraA8, MMM = 1 , dens = vardensity, temp = vartemp, Q=q)
 @time psformation[2]=simulate(varenergy , particles, paraA10, MMM = 1 , dens = vardensity, temp = vartemp, Q=q)
 @time psformation[3]=simulate(varenergy , particles, paraA12, MMM = 1 , dens = vardensity, temp = vartemp, Q=q)
@@ -277,7 +285,22 @@ vartemp = 75.0
 @time psformation[7]=simulate(varenergy , particles, paraC6, MMM = 1 , dens = vardensity, temp = vartemp, Q=q)
 @time psformation[8]=simulate(varenergy , particles, paraC3, MMM = 1 , dens = vardensity, temp = vartemp, Q=q)
 @time psformation[9]=simulate(varenergy , particles, paraC1, MMM = 1 , dens = vardensity, temp = vartemp, Q=q)
+"""
 
 
 
-println(psformation)
+
+q = 1.0
+particles = 5000
+varenergy = 5e12
+vardensity = 3.5e7
+vartemp = 75.0
+
+
+para = [1.0, 4.0, 18.0, 18.0, 8.0, 6.0, 10.0, 3.0, 10.0, 20.0]
+
+@time simulate(varenergy , particles, para, MMM = 1 , dens = vardensity, temp = vartemp, Q=q)
+
+
+
+#println(psformation)
