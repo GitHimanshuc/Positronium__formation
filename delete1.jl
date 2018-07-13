@@ -2,16 +2,30 @@ using Distributions
 using Plots
 
 
-function final_scattering_angle!(sigma ,theta, phi)
-    u=sigma[1]
-    v=sigma[2]
-    w=sigma[3]
+function final_scattering_energy_and_direction!( Ei , sigma,temp )
 
-    s = sqrt(1-w*w)
 
-    sigma[1] = ((u*w)*cos(phi) - v*sin(phi))*sin(theta)/s + u*cos(theta)
-    sigma[2] = ((v*w)*cos(phi) + u*sin(phi))*sin(theta)/s + v*cos(theta)
-    sigma[3] =  -s*(sin(theta)*cos(phi)) + w*cos(theta)
+    vm = rand(Normal(0.0,sqrt(1.38e-23*temp/1.67e-27)),3)
+
+    mm = 1.67e-27    # Kg
+    m = 9.1e-31   # Kg
+    M = mm + m
+    Ei = Ei*1.6e-19
+    v1 = sqrt(2*Ei/m)*sigma  # m/s
+
+    vc = (m*v1 + mm*vm)/M
+
+    g1 = v1 - vm
+
+    θ = acos(1 -2*rand())
+    ϕ = 2*pi*rand()
+
+    g2 = norm(g1)*[sin(θ)*cos(ϕ),sin(ϕ)*sin(θ),cos(θ)]
+
+    v2 = (vc + mm/M*g2)
+    sigma = v2/norm(v2)
+
+    return dot(v2,v2)*.5*m/1.6e-19
 
 
 end
@@ -59,9 +73,9 @@ sigma = [0.0,1.0,0.0]
 while (currene > 0.0) && (i<N)
     diff_array[i] = currene
     i = i+1
-    # println(currene)
+    println(currene)
 
-    currene = enrgy_loss!(currene, temp ,sigma )
+    currene = final_scattering_energy_and_direction!(currene,sigma , temp)
 
 end
 
