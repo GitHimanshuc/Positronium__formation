@@ -1,12 +1,27 @@
 using DataFrames
 using Distributions
 using Plots
-using OtherFunctions
+# using OtherFunctions
+function surge_exp(x,xth,varlambda)
 
+    if x < xth
+        return 0.0
+    else
+        return (exp(1)/varlambda*(x-xth)*exp(-(x-xth)/varlambda))
+    end
+end
 
-function final_scattering_energy_and_direction!( Ei , sigma_temp,temp )
+function surge_poly(x,xth,varlambda)
 
-    vm = rand(Normal(0.0,sqrt(1.38e-23*temp/1.67e-27)),3)
+    if x < xth
+        return 0.0
+    else
+        return (4*varlambda*(x-xth)/(x-xth+varlambda)^2)
+    end
+end
+function final_scattering_energy_and_direction!( Ei , sigma_temp,tempa )
+
+    vma = rand(Normal(0.0,sqrt(1.38e-23*tempa/1.67e-27)),3)
 
     mm = 1.67e-27    # Kg
     m = 9.1e-31   # Kg
@@ -14,9 +29,9 @@ function final_scattering_energy_and_direction!( Ei , sigma_temp,temp )
     Ei = Ei*1.6e-19
     v1 = sqrt(2*Ei/m)*sigma_temp  # m/s
 
-    vc = (m*v1 + mm*vm)/M
+    vc = (m*v1 + mm*vma)/M
 
-    g1 = v1 - vm
+    g1 = v1 - vma
 
     θ = acos(1 -2*rand())
     ϕ = 2*pi*rand()
@@ -29,6 +44,7 @@ function final_scattering_energy_and_direction!( Ei , sigma_temp,temp )
     return dot(v2,v2)*.5*m/1.6e-19
 
 end
+
 
 
 rng = MersenneTwister(1234)
@@ -148,8 +164,7 @@ function simulate( energy = 5000.0, N = 10000, para = rand(10); MMM::Int = 1 , d
     return_value_of_function = rand(4)
     #arrcurrene = rand(N)*energy
 
-
-
+    countera = 0
     for i in 1:N   #""" THE loop """
 
         currene = arrcurrene[i]   #""" A value of energy choosen from the distribution """
@@ -163,8 +178,7 @@ function simulate( energy = 5000.0, N = 10000, para = rand(10); MMM::Int = 1 , d
         avgdist = (i-1)*avgdist/i + tempdist/i
         avgtime = (i-1)*avgtime/i + temptime/i
         temptime = 0.0
-        varposition_vector = [.0,.0,.0]
-
+        varposition_vector[:] = 0.0
 
         # return_value_of_function = bring_down_the_energy!(currene , dens  , temp  , sigma  , varposition_vector  , para, Q )
         #
@@ -177,7 +191,11 @@ function simulate( energy = 5000.0, N = 10000, para = rand(10); MMM::Int = 1 , d
 
 
 
-
+            if currene > 3000
+                countera = countera +1
+                print(countera,"  ")
+                break
+            end
 
             # Without extrapolation
             ########################################################################################################
@@ -185,7 +203,7 @@ function simulate( energy = 5000.0, N = 10000, para = rand(10); MMM::Int = 1 , d
             thresholdps = Apsf*surge_exp(currene,epsf,lpsf)
             thresholddi = Aion*surge_poly(currene,eion,lion)   #Storing the relevant cross sections in temporary variables
             thresholdex = Aexh*surge_exp(currene,eexh,lexh)
-            elas = elastic_cross_section(currene , 200.0, 0.8 , 25.0 , 0.7)
+            elas = elas
             a = rand()   #""" Random number to be used in simulation """
             total_cross = elas + thresholdps + thresholddi + thresholdex
             a = a*total_cross # Normalizing
@@ -275,7 +293,7 @@ points = 2000     # Try to limit the number of points to 10000 or so otherwise t
 scatter3d(a[1:points,2],a[1:points,1],a[1:points,3])
 writedlm("data.txt",a)
 
-"""
+
 
 
 #para = [elas, Aion, eion, lion, Apsf, epsf, lpsf, Aexh, eexh, lexh]
@@ -289,6 +307,10 @@ paraB1 = [1.0,1/3,15.0,5.0,1.0,10.0,1.0,1.0,2.0,1.0]
 paraC6 = [1.0,1/6,10.0,5.0,1.0,10.0,1.0,0.0,8.0,1.0]
 paraC3 = [1.0,1/3,10.0,5.0,1.0,10.0,1.0,0.0,8.0,1.0]
 paraC1 = [1.0,1.0,10.0,5.0,1.0,10.0,1.0,0.0,8.0,1.0]
+
+
+para = [1.0, 4.0, 18.0, 18.0, 8.0, 6.0, 10.0, 3.0, 10.0, 20.0] # Parameters that give same results as hydrogen
+
 
 
 psformation = Array{Float64}(9) # To store ps formation percentage
@@ -312,20 +334,19 @@ vartemp = 75.0
 
 println(psformation)
 
-
-
 """
+
 q = 1.0
 particles = 5000
-varenergy = 5e12
+varenergy = 200.0
 vardensity = 3.5e7
-vartemp = 75.0
+vartemp = 75.0*10.^collect(1:1:1)
+ps_formed = Array{Float64}(length(vartemp))
 
+paraA8 = [1.0,1/3,15.0,5.0,1.0,10.0,1.0,1/3,8.0,1.0]
 
-para = [1.0, 4.0, 18.0, 18.0, 8.0, 6.0, 10.0, 3.0, 10.0, 20.0]
+for i in 1:length(vartemp)
+    @time ps_formed[i]=simulate(varenergy , particles, paraA8, MMM = 1 , dens = vardensity, temp = vartemp[i], Q=q)
+end
 
-@time simulate(varenergy , particles, para, MMM = 1 , dens = vardensity, temp = vartemp, Q=q)
-
-"""
-
-#println(psformation)
+println(ps_formed)
