@@ -13,12 +13,12 @@ function surge_exp(x::Float64,xth::Float64,varp,varlambda::Float64)
     end
 end
 
-function surge_poly(x::Float64,xth::Float64,varp,varlambda::Float64)
+function surge_poly(x,xth,varp,varlambda)
 
     if x < xth
         return 0.0
     else
-        return (varlambda*(varp+1)^(varp+1)*(x-xth)/(x-xth+varlambda*varp)^(varp+1))
+        return (varlambda^(varp)*(varp+1)^(varp+1)*(x-xth)/(x-xth+varlambda*varp)^(varp+1))
     end
 end
 
@@ -78,7 +78,7 @@ function simulate( energy = 5000.0, N = 10000, para = rand(10); MMM::Int = 1 , d
     pelas = 2
     pion = 1
     pps = 0.5
-    pex = 0.5
+    pex = 1.5
 
 
 
@@ -214,7 +214,7 @@ function simulate( energy = 5000.0, N = 10000, para = rand(10); MMM::Int = 1 , d
             ########################################################################################################
             thresholdps = Apsf*surge_exp(currene,epsf,pps,lpsf)
             thresholddi = Aion*surge_poly(currene,eion,pion,lion)   #Storing the relevant cross sections in temporary variables
-            thresholdex = Aexh*surge_exp(currene,eexh,pex,lexh)
+            thresholdex = Aexh*surge_poly(currene,eexh,pex,lexh)
             elas = Aelas*surge_poly(currene,eelas,pelas,lelas)
             a = rand()   #""" Random number to be used in simulation """
             total_cross = elas + thresholdps + thresholddi + thresholdex
@@ -300,9 +300,9 @@ vartemp = 75.0
 
 
 
-#para = [elas, Aion, eion, lion, Apsf, epsf, lpsf, Aexh, eexh, lexh]
-para = [1.0,0.50,16.8,10.0,1.0,10.0,7.0,0.50,10.0,25.0]  # Check what default values are meant ot be.
-varnum = 10  #Number of points the parmeter should be divided into
+#para = [Aelas, Aion, eion, lion, Apsf, epsf, lpsf, Aexh, eexh, lexh]
+para = [1.0,0.30,13.6,30.0,1.0,6.8,7.0,0.5,10.0,12.0]
+varnum = 10  #NUmber of points the parmeter should be divided into
 
 
 
@@ -318,9 +318,9 @@ arrparae = Array{Float64}(varnum,10)
 paranow  = Array{Float64}(varnum,10)
 variation_Q = collect(0:1/varnum:1)[2:end]
 Qnow  = variation_Q
-variation_paraA = collect(0:1/varnum:1)[2:end]   # Variation of the amplitude
+variation_paraA = collect(0:1.5/varnum:1.5)[2:end]   # Variation of the amplitude
 variation_paral = collect(1:(30-1)/varnum:30)[2:end]   # Variation of the falling rate
-variation_parae = collect(8:(20-8)/varnum:20)[2:end]   # Variation of the Excitation threshold
+variation_parae = collect(8:(40-8)/varnum:40)[2:end]   # Variation of the Excitation threshold
 
 
 for i in 1:varnum
@@ -333,8 +333,8 @@ for i in 1:varnum
 end
 
 
-paranow = arrparae
-name = "e"
+paranow = arrparal
+name = "l"
 Qnow[:] = q
 
 for i in 1:varnum
@@ -344,13 +344,13 @@ for i in 1:varnum
 end
 println("--------------------------------------------------------------------------------------------------------")
 if paranow == arrparaA
-    plot(variation_paraA, array_ps,xlabel = "Magnitude of ionization cross section",ylabel = "Percentage Positronium formed",label = "With recoil")
+    plot(variation_paraA, array_ps,xlabel = "Relative Magnitude of Excitation (SetB) cross section",ylabel = "Percentage Positronium formed",label = "With recoil")
     plot!(variation_paraA, array_psfalse,shape = :circle,label = "Without recoil")
 end
 # plot(variation_paraA, array_ion)
 # plot(variation_paraA, array_elas)
 if paranow == arrparal
-    plot(variation_paral, array_ps,xlabel = "lambda",ylabel = "Percentage Positronium formed",label = "With recoil")
+    plot(variation_paral, array_ps,xlabel = "Parameter lambda of Excitation (SetB) cross section",ylabel = "Percentage Positronium formed",label = "With recoil")
     plot!(variation_paral, array_psfalse,shape = :circle,label = "Without recoil")
 end
 # plot(variation_paral, array_ion)
@@ -360,7 +360,7 @@ end
 # plot(variation_Q, array_ion)
 # plot(variation_Q, array_elas)
 if paranow ==arrparae
-    plot(variation_parae, array_ps,xlabel = "Ionization threshold",ylabel = "Percentage Positronium formed",label = "With recoil")
+    plot(variation_parae, array_ps,xlabel = "Excitation (SetB) threshold",ylabel = "Percentage Positronium formed",label = "With recoil")
     plot!(variation_parae, array_psfalse,shape = :circle,label = "Without recoil")
 end
 # plot(variation_parae, array_ion)
