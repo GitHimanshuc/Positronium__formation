@@ -8,6 +8,8 @@ export surge_exp
 export surge_poly
 export elastic_cross_section
 export bring_down_the_energy!
+export final_scattering_energy_and_direction!
+
 
 using DifferentialEquations
 using Dierckx
@@ -261,26 +263,55 @@ function bring_down_the_energy!(currene , dens  , temperature  , sigma  , varpos
 
 
 
-    function enrgy_loss!(E_init, temp ,sigma )
-
-        vm = rand(Normal(0.0,sqrt(3/2*1.38e-23*temp/1.67e-27)),3)
-
-        mm = 1.67e-27    # Kg
-        m = 9.1e-31   # Kg
-        M = mm + m
-        Eₗ = E_init*1.6e-19  # J
-        vi = sqrt(2*Eₗ/m)*sigma  # m/s
-
-        pᶜ = (m*vi + mm*vm)              #Vector
-
-        # DO not change the order of the next three sentences
-        β = sqrt(2m)*1/M*dot(pᶜ,sigma)  # m/s
-        final_scattering_angle!(sigma , asin((2*rand()-1)), 2*pi*rand()) # Right now we are using the isotropic scattering case.
-        α = sqrt(2m)*1/M*dot(pᶜ,sigma)  # m/s
-
-        1/2*( α^2 -2β * sqrt(Eₗ) + 2Eₗ - sqrt(abs(α^4 - 4*α^2 * β * sqrt(Eₗ) + 4*α^2*Eₗ)))/(1.6e-19) # Final energy to be returned in eV
-    end
 
 
+
+end
+
+function enrgy_loss!(E_init, temp ,sigma )
+
+    vm = rand(Normal(0.0,sqrt(3/2*1.38e-23*temp/1.67e-27)),3)
+
+    mm = 1.67e-27    # Kg
+    m = 9.1e-31   # Kg
+    M = mm + m
+    Eₗ = E_init*1.6e-19  # J
+    vi = sqrt(2*Eₗ/m)*sigma  # m/s
+
+    pᶜ = (m*vi + mm*vm)              #Vector
+
+    # DO not change the order of the next three sentences
+    β = sqrt(2m)*1/M*dot(pᶜ,sigma)  # m/s
+    final_scattering_angle!(sigma , asin((2*rand()-1)), 2*pi*rand()) # Right now we are using the isotropic scattering case.
+    α = sqrt(2m)*1/M*dot(pᶜ,sigma)  # m/s
+
+    1/2*( α^2 -2β * sqrt(Eₗ) + 2Eₗ - sqrt(abs(α^4 - 4*α^2 * β * sqrt(Eₗ) + 4*α^2*Eₗ)))/(1.6e-19) # Final energy to be returned in eV
+end
+
+
+
+function final_scattering_energy_and_direction!( Ei , sigma_temp,tempa )
+
+    vma = rand(Normal(0.0,sqrt(1.38e-23*tempa/1.67e-27)),3)
+
+    mm = 1.67e-27    # Kg
+    m = 9.1e-31   # Kg
+    M = mm + m
+    Ei = Ei*1.6e-19
+    v1 = sqrt(2*Ei/m)*sigma_temp  # m/s
+
+    vc = (m*v1 + mm*vma)/M
+
+    g1 = v1 - vma
+
+    θ = acos(1 -2*rand())
+    ϕ = 2*pi*rand()
+
+    g2 = norm(g1)*[sin(θ)*cos(ϕ),sin(ϕ)*sin(θ),cos(θ)]
+
+    v2 = (vc + mm/M*g2)
+    sigma_temp = v2/norm(v2)
+
+    return dot(v2,v2)*.5*m/1.6e-19
 
 end

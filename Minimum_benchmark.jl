@@ -2,7 +2,7 @@ using DataFrames
 using Distributions
 using Plots
 # using OtherFunctions
-function surge_exp(x,xth,varlambda)
+function surge_exp(x::Float64,xth::Float64,varlambda::Float64)
 
     if x < xth
         return 0.0
@@ -11,7 +11,7 @@ function surge_exp(x,xth,varlambda)
     end
 end
 
-function surge_poly(x,xth,varlambda)
+function surge_poly(x::Float64,xth::Float64,varlambda::Float64)
 
     if x < xth
         return 0.0
@@ -19,6 +19,36 @@ function surge_poly(x,xth,varlambda)
         return (4*varlambda*(x-xth)/(x-xth+varlambda)^2)
     end
 end
+# function final_scattering_energy_and_direction!( Ei , sigma_temp,tempa ,vma,v1,vc,v2,g1,g2)
+#
+#
+#
+#     vma[1] = rand(Normal(0.0,sqrt(1.38e-23*tempa/1.67e-27)))
+#     vma[2] = rand(Normal(0.0,sqrt(1.38e-23*tempa/1.67e-27)))
+#     vma[3] = rand(Normal(0.0,sqrt(1.38e-23*tempa/1.67e-27)))
+#
+#     mm = 1.67e-27    # Kg
+#     m = 9.1e-31   # Kg
+#     M = mm + m
+#     Ei = Ei*1.6e-19
+#     v1 .= sqrt(2*Ei/m).*sigma_temp  # m/s
+#
+#     vc .= (m.*v1 .+ mm.*vma)./M
+#
+#     g1 = v1 - vma
+#
+#     θ = acos(1 -2*rand())
+#     ϕ = 2*pi*rand()
+#
+#     g2 = norm(g1).*[sin(θ)*cos(ϕ),sin(ϕ)*sin(θ),cos(θ)]
+#
+#     v2 = (vc + mm/M*g2)
+#     sigma_temp = v2/norm(v2)
+#
+#     return dot(v2,v2)*.5*m/1.6e-19
+#
+# end
+
 function final_scattering_energy_and_direction!( Ei , sigma_temp,tempa )
 
     vma = rand(Normal(0.0,sqrt(1.38e-23*tempa/1.67e-27)),3)
@@ -41,16 +71,15 @@ function final_scattering_energy_and_direction!( Ei , sigma_temp,tempa )
     v2 = (vc + mm/M*g2)
     sigma_temp = v2/norm(v2)
 
+
     return dot(v2,v2)*.5*m/1.6e-19
 
 end
 
-
-
 rng = MersenneTwister(1234)
 
-function simulate( energy = 5000.0, N = 10000, para = rand(10); MMM::Int = 1 , dens::Float64 = 3.5e7, temp::Float64 = 75.0, Q::Float64 = 1.0)
 
+function simulate( energy=5000.0, N = 10000, para = zeros(10); MMM::Int = 1 , dens::Float64 = 3.5e7, temp::Float64 = 75.0, Q::Float64 = 1.0)
 
 
     elas = para[1]   #Armstrong squared
@@ -69,9 +98,13 @@ function simulate( energy = 5000.0, N = 10000, para = rand(10); MMM::Int = 1 , d
     #Not included as of now because at a time we only work with either high energy or low energy excitations
     Aexl = 0.0
     eexl = eexh
-    lexl = 1
-
-
+    lexl = 1.0
+# ----------------------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------
+# Some global variables to make funcions not allocate memory
+    vma=v1=vc=v2=g1=g2=zeros(3)
+# ----------------------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------
 
     #para = [elas, Aion, eion, lion, Apsf, epsf, lpsf, Aexh, eexh, lexh]
 
@@ -79,10 +112,10 @@ function simulate( energy = 5000.0, N = 10000, para = rand(10); MMM::Int = 1 , d
     dirthresh = eion   #""" Direct ionization threshold """
     exthresh = eexh   #""" Excitation threshold """
 
-    println("------------------------------------------------------------------------")
-    #Astronomical data
-    println("The density of ISM is : ",dens," Particles per meter cubed")  #particle per m^3           #density of ISM                     #right now it is CNM
-    println("The temperature of ISM is : ",temp," Kelvin")   #in kelvin                    #temperature of ISM
+    # println("------------------------------------------------------------------------")
+    # #Astronomical data
+    # println("The density of ISM is : ",dens," Particles per meter cubed")  #particle per m^3           #density of ISM                     #right now it is CNM
+    # println("The temperature of ISM is : ",temp," Kelvin")   #in kelvin                    #temperature of ISM
 
 
 
@@ -136,8 +169,8 @@ function simulate( energy = 5000.0, N = 10000, para = rand(10); MMM::Int = 1 , d
 
 
 
-    println("\n\nThe number of particles simulated is:   ",N)
-    println("The mean energy is:  ",energy,"  eV")
+    # println("\n\nThe number of particles simulated is:   ",N)
+    # println("The mean energy is:  ",energy,"  eV")
 
 
 
@@ -149,13 +182,13 @@ function simulate( energy = 5000.0, N = 10000, para = rand(10); MMM::Int = 1 , d
 
 
 
-    arrcurrene = rand(Normal(energy, psthresh*2), N)    #This array stores the energy distribution / The positron energy will be sampled form this array
+    arrcurrene = rand(Normal(energy, 6.8*2), N)    #This array stores the energy distribution / The positron energy will be sampled form this array
     arrinitial_sigma = 2*rand(N,3)-1 # normalization is Required
     # Normalizing the sigma's norm to 1
     norm  = arrinitial_sigma[:,1].*arrinitial_sigma[:,1]+arrinitial_sigma[:,2].*arrinitial_sigma[:,2]+arrinitial_sigma[:,3].*arrinitial_sigma[:,3]
     arrinitial_sigma = arrinitial_sigma[:,:]./sqrt.(norm[:]) # somehow it works
     sigma = [0.0,1.0,0.0] # Will store the direction cosine
-    velocity_vector = [.0,.0,.0] # Will hold the current velocity.
+    velocity_vector = [0.0,0.0,0.0] # Will hold the current velocity.
     varalpha = 0.0 # Will store the factor multiplied by which we will get the velocity vector from the direction cosine
 
     position_vector = Array{Float64}(N,3) # Will be used to hold the final 3D position of the positrons before annhilation
@@ -165,7 +198,14 @@ function simulate( energy = 5000.0, N = 10000, para = rand(10); MMM::Int = 1 , d
     #arrcurrene = rand(N)*energy
 
     countera = 0
+    percentage_calculation = Int64(N/20)+1
     for i in 1:N   #""" THE loop """
+
+        #
+        # if (i%percentage_calculation ==0)
+        #     println(floor(i/N*100),"%")
+        # end
+
 
         currene = arrcurrene[i]   #""" A value of energy choosen from the distribution """
         sigma = arrinitial_sigma[i,:]  # A value of initial velocity is choosen
@@ -190,12 +230,12 @@ function simulate( energy = 5000.0, N = 10000, para = rand(10); MMM::Int = 1 , d
         while currene >= psthresh   #""" Simulates life of a particle """
 
 
-
-            if currene > 3000
-                countera = countera +1
-                print(countera,"  ")
-                break
-            end
+            #
+            # if currene > 3000
+            #     countera = countera +1
+            #     print(countera,"  ")
+            #     break
+            # end
 
             # Without extrapolation
             ########################################################################################################
@@ -205,7 +245,8 @@ function simulate( energy = 5000.0, N = 10000, para = rand(10); MMM::Int = 1 , d
             thresholdex = Aexh*surge_exp(currene,eexh,lexh)
             elas = elas
             a = rand()   #""" Random number to be used in simulation """
-            total_cross = elas + thresholdps + thresholddi + thresholdex
+            # total_cross = elas + thresholdps + thresholddi + thresholdex
+            total_cross = thresholdps + thresholddi
             a = a*total_cross # Normalizing
 
 
@@ -229,15 +270,30 @@ function simulate( energy = 5000.0, N = 10000, para = rand(10); MMM::Int = 1 , d
             if a < thresholdps
                 posfor = posfor + 1
                 break
-            elseif a < (thresholdps + thresholddi)
-                dirioncount = dirioncount + 1
-                currene = currene - dirthresh
-                currene = Q*currene           # The fraction of energy shared with the emitted electron
-            elseif a < (thresholdps + thresholddi + thresholdex)
-                excount = excount + 1
-                currene = currene - exthresh
+            # elseif a < (thresholdps + thresholddi)
+            #     dirioncount = dirioncount + 1
+            #     currene = currene - dirthresh
+            #     currene = Q*currene           # The fraction of energy shared with the emitted electron
+            # elseif a < (thresholdps + thresholddi + thresholdex)
+            #     excount = excount + 1
+            #     currene = currene - exthresh
             else
-                collcount = collcount + 1
+                dirioncount = dirioncount + 1
+                currene = currene - dirthresh*3
+
+                # b=rand()
+                # if b > 1/3
+                #     currene = currene - dirthresh
+                # elseif b>2/3
+                #     currene = currene - dirthresh*.75
+                # else
+                #     currene = currene - dirthresh*.5
+                #
+                # end
+
+                # currene =rand()*currene
+                currene =Q*currene
+
 """
                 if (1-2*varratio*(1 - em/currene))<1
                     println(currene, "  gained   ", -currene*(2*varratio*(1 - em/currene)))
@@ -254,25 +310,25 @@ function simulate( energy = 5000.0, N = 10000, para = rand(10); MMM::Int = 1 , d
     end
 
 
-    println("\n\nThe results are:\n\n")
-    println("Postronium formed:")
-    print((posfor)/N*100)
-    println("%")
-    println("Average direct ionization count is:")
-    println((dirioncount)/N)
-    println("Average number of excitations:")
-    println((excount/N))
-    println("Avearage number of elastic collisions:")
-    println((collcount)/N)
-    println("Average distance travelled is:")
-    print(avgdist/(3.086e16))
-    println(" Pc")
-    println("Average time travelled for is:")
-    print(avgtime/31536000)
-    println(" Years")
-    println("Average number of others:")
-    println((othcount/N),"\n\n")
-    (posfor)/N*100
+    # println("\n\nThe results are:\n\n")
+    # println("Postronium formed:")
+    # print((posfor)/N*100)
+    # println("%")
+    # println("Average direct ionization count is:")
+    # println((dirioncount)/N)
+    # # println("Average number of excitations:")
+    # println((excount/N))
+    # println("Avearage number of elastic collisions:")
+    # println((collcount)/N)
+    # println("Average distance travelled is:")
+    # print(avgdist/(3.086e16))
+    # println(" Pc")
+    # println("Average time travelled for is:")
+    # print(avgtime/31536000)
+    # println(" Years")
+    # println("Average number of others:")
+    # println((othcount/N),"\n\n")
+    return (posfor)/N*100 , (dirioncount)/N
 end
 
 
@@ -336,17 +392,52 @@ println(psformation)
 
 """
 
-q = 1.0
-particles = 5000
-varenergy = 200.0
+q = 0.5
+particles = 20000
+varenergy = 50000.0
 vardensity = 3.5e7
-vartemp = 75.0*10.^collect(1:1:1)
-ps_formed = Array{Float64}(length(vartemp))
+vartemp = 75.0
 
+arrq = collect(0:.001:1)
+vartempa = [1.0]
+ps_formeda = Array{Float64}(length(vartemp)>length(arrq)?length(vartmep):(length(arrq)-2))
+elas_counta = Array{Float64}(length(ps_formeda))
+
+varenergya = collect(1e5:5000.0:1e6)
+# varenergya = [30000.0,32000.0]
+ps_e = Array{Float64}(length(varenergya))
+elas_e = Array{Float64}(length(varenergya))
+
+elas_count = 0.0
+ps_formed = 0.0
+paraA8 = Array{Float64}(10)
 paraA8 = [1.0,1/3,15.0,5.0,1.0,10.0,1.0,1/3,8.0,1.0]
 
-for i in 1:length(vartemp)
-    @time ps_formed[i]=simulate(varenergy , particles, paraA8, MMM = 1 , dens = vardensity, temp = vartemp[i], Q=q)
-end
 
-println(ps_formed)
+# for i in 1:length(vartemp)
+#     @time ps_formeda[i]=simulate(varenergy , particles, paraA8, MMM = 1 , dens = vardensity, temp = vartempa[i], Q=q)
+# end
+
+
+
+# for i in 1:(length(arrq)-2)
+#     @time ps_formeda[i],elas_counta[i] =simulate(varenergy , particles, paraA8, MMM = 1 , dens = vardensity, temp = vartemp, Q=arrq[i+1])
+# end
+# plot(arrq[2:(end-1)],ps_formed)
+#  plot(arrq[2:(end-1)],elas_count)
+
+# for i in 1:(length(varenergya))
+#     @time ps_e[i],elas_e[i] =simulate(varenergya[i] , particles, paraA8, MMM = 1 , dens = vardensity, temp = vartemp, Q=q)
+#     println(i/length(varenergya)*100," %")
+# end
+# println(ps_e)
+# plot(varenergya,ps_e)
+# plot(varenergya,elas_e)
+
+
+
+@time ps_formed,elas_count = simulate(varenergy , particles, paraA8, MMM = 1 , dens = vardensity, temp = vartemp, Q=1.0)
+println(ps_formed,"      ",elas_count)
+
+
+# @code_warntype simulate(varenergy , particles, paraA8, MMM = 1 , dens = vardensity, temp = vartemp[i], Q=q)

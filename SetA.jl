@@ -333,8 +333,8 @@ for i in 1:varnum
 end
 
 
-paranow = arrparaA
-name = "A"
+paranow = arrparal
+name = "l"
 Qnow[:] = q
 
 for i in 1:varnum
