@@ -339,8 +339,8 @@ end
 psformation = Array{Float64}(1) # To store ps formation percentage
 
 q = 1.0
-particles = 5000
-varenergy = 1000
+particles = 5000*4
+varenergy = 10000
 vardensity = 3.5e7
 vartemp = 75.0
 
@@ -392,6 +392,8 @@ end
 paranow = arrparaA
 name = "A"
 Qnow[:] = q
+name  = name*" with Q = "*string(q)
+
 
 for i in 1:varnum
     @time array_ps[i],array_ion[i],array_elas[i], array_thermalization_time[i],array_timelow[i],array_energylow[i,:]=simulate(varenergy , particles, paranow[i,:], MMM = 1 , dens = vardensity, temp = vartemp, Q=Qnow[i],elastic_present=true)
@@ -454,7 +456,7 @@ if paranow == arrparal
     plot!(variation_paral, array_elasfalse,label = "Elastic Without recoil/"*string(varfactor3),shape = :circle)
     savefig("C:\\Users\\Himanshu\\Desktop\\Report\\graphs\\SetB"*name*"_collsions")
 
-    plot(variation_paral, array_thermalization_time,xlabel = "Parameter lambda of Excitation(SetB) cross section",ylabel = "Thermalization_time (years)",label = "")
+    plot(variation_paral, array_thermalization_time,xlabel = "Parameter lambda of Excitation(SetB) cross section",ylabel = "Time (years)",label = "Thermalization time")
     plot!(variation_paral, array_timelow,label = "Time_low*"*string(varfactor)*" with recoil")
     plot!(variation_paral, array_timelowfalse,label = "Time_low*"*string(varfactor)*" Without recoil",shape = :circle)
     savefig("C:\\Users\\Himanshu\\Desktop\\Report\\graphs\\SetB"*name*"_times")
@@ -483,7 +485,7 @@ if paranow ==arrparae
     savefig("C:\\Users\\Himanshu\\Desktop\\Report\\graphs\\SetB"*name*"_collsions")
 
 
-    plot(variation_parae, array_thermalization_time,xlabel = "Excitation(SetB) threshold",ylabel = "Thermalization_time (years)",label = "")
+    plot(variation_parae, array_thermalization_time,xlabel = "Excitation(SetB) threshold",ylabel = "Time (years)",label = "Thermalization time")
     plot!(variation_parae, array_timelow,label = "Time_low*"*string(varfactor)*" with recoil")
     plot!(variation_parae, array_timelowfalse,label = "Time_low*"*string(varfactor)*" Without recoil",shape = :circle)
     savefig("C:\\Users\\Himanshu\\Desktop\\Report\\graphs\\SetB"*name*"_times")

@@ -326,6 +326,8 @@ function simulate( energy = 5000.0, N = 10000, para = rand(10); MMM::Int = 1 , d
     # println((othcount/N),"\n\n")
     # println(arrtime_low[1:10])
     # return (posfor)/N*100,dirioncount/N,collcount/N,mean(arrtime_low)/31536000,avgtime/31536000
+
+
     return (posfor)/N*100,dirioncount/N,only_non_ps_elascount,avgtime/31536000,mean(arr_timelow)/31536000,arr_energylow
 end
 
@@ -340,7 +342,7 @@ psformation = Array{Float64}(1) # To store ps formation percentage
 
 q = 1.0
 particles = 5000
-varenergy = 1000
+varenergy = 10000
 vardensity = 3.5e7
 vartemp = 75.0
 
@@ -358,14 +360,16 @@ array_ion = Array{Float64}(varnum)
 array_elas = Array{Float64}(varnum)
 array_timelow = Array{Float64}(varnum)
 array_thermalization_time = Array{Float64}(varnum)
-array_energylow = Array{Float64}(varnum,particles)
+array_energylow = Array{Float64}(varnum,particles+1)
+array_energylow[varnum,particles + 1] = 0.3145
 
 array_psfalse = Array{Float64}(varnum)
 array_ionfalse = Array{Float64}(varnum)
 array_elasfalse = Array{Float64}(varnum)
 array_timelowfalse = Array{Float64}(varnum)
 array_thermalization_timefalse = Array{Float64}(varnum)
-array_energylowfalse = Array{Float64}(varnum,particles)
+array_energylowfalse = Array{Float64}(varnum,particles+1)
+array_energylowfalse[varnum,particles + 1] = 0.3145
 
 
 arrparaA = Array{Float64}(varnum,10)
@@ -388,14 +392,18 @@ for i in 1:varnum
     arrparae[i,3] = variation_parae[i]  #lion
 end
 
+for k in 1:10
 
-paranow = arrparal
-name = "l"
+
+paranow = arrparaA
+name = "A"
+q = k/20.0 + 0.5
 Qnow[:] = q
+name  = name*" with Q = "*string(q)
 
 for i in 1:varnum
-    @time array_ps[i],array_ion[i],array_elas[i], array_thermalization_time[i],array_timelow[i],array_energylow[i,:]=simulate(varenergy , particles, paranow[i,:], MMM = 1 , dens = vardensity, temp = vartemp, Q=Qnow[i],elastic_present=true)
-    @time array_psfalse[i],array_ionfalse[i],array_elasfalse[i],array_thermalization_timefalse[i],array_timelowfalse[i],array_energylowfalse[i,:]=simulate(varenergy , particles, paranow[i,:], MMM = 1 , dens = vardensity, temp = vartemp, Q=Qnow[i],elastic_present=false)
+    @time array_ps[i],array_ion[i],array_elas[i], array_thermalization_time[i],array_timelow[i],array_energylow[i,1:end-1]=simulate(varenergy , particles, paranow[i,:], MMM = 1 , dens = vardensity, temp = vartemp, Q=Qnow[i],elastic_present=true)
+    @time array_psfalse[i],array_ionfalse[i],array_elasfalse[i],array_thermalization_timefalse[i],array_timelowfalse[i],array_energylowfalse[i,1:end-1]=simulate(varenergy , particles, paranow[i,:], MMM = 1 , dens = vardensity, temp = vartemp, Q=Qnow[i],elastic_present=false)
     println(i/varnum*100,"% done\n")
 end
 println("--------------------------------------------------------------------------------------------------------")
@@ -454,7 +462,7 @@ if paranow == arrparal
     plot!(variation_paral, array_elasfalse,label = "Elastic Without recoil/"*string(varfactor3),shape = :circle)
     savefig("C:\\Users\\Himanshu\\Desktop\\Report\\graphs\\SetA"*name*"_collsions")
 
-    plot(variation_paral, array_thermalization_time,xlabel = "Parameter lambda of ionization cross section",ylabel = "Thermalization_time (years)",label = "")
+    plot(variation_paral, array_thermalization_time,xlabel = "Parameter lambda of ionization cross section",ylabel = "Time (years)",label = "Thermalization time")
     plot!(variation_paral, array_timelow,label = "Time_low*"*string(varfactor)*" with recoil")
     plot!(variation_paral, array_timelowfalse,label = "Time_low*"*string(varfactor)*" Without recoil",shape = :circle)
     savefig("C:\\Users\\Himanshu\\Desktop\\Report\\graphs\\SetA"*name*"_times")
@@ -483,7 +491,7 @@ if paranow ==arrparae
     savefig("C:\\Users\\Himanshu\\Desktop\\Report\\graphs\\SetA"*name*"_collsions")
 
 
-    plot(variation_parae, array_thermalization_time,xlabel = "Ionization threshold",ylabel = "Thermalization_time (years)",label = "")
+    plot(variation_parae, array_thermalization_time,xlabel = "Ionization threshold",ylabel = "Time (years)",label = "Thermalization time")
     plot!(variation_parae, array_timelow,label = "Time_low*"*string(varfactor)*" with recoil")
     plot!(variation_parae, array_timelowfalse,label = "Time_low*"*string(varfactor)*" Without recoil",shape = :circle)
     savefig("C:\\Users\\Himanshu\\Desktop\\Report\\graphs\\SetA"*name*"_times")
@@ -498,6 +506,10 @@ if paranow ==arrparae
     histogram!(array_energylowfalse[varsomething,array_energylowfalse[varsomething,:].<varpsthresh],label="without recoil",alpha = .5)
     savefig("C:\\Users\\Himanshu\\Desktop\\Report\\graphs\\SetA"*name*"_energy_distribution_below_psthresh")
 
+
+
+
+end
 
 
 end
