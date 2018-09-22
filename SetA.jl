@@ -411,8 +411,13 @@ end
 number_of_Q_values = 10  #->  Number of Q values each set of parameters should be plotted against.
 
 for k in 1:number_of_Q_values
-
+    
+    # Uncomment anyone of these three to get plots containing the respective variation of parameter.
     paranow = arrparaA
+    #paranow = arrparae
+    #paranow = arrparal
+    
+    
     name = "A"
     q = k/(number_of_Q_values*2.0) + 0.5  # Below 0.5 the values become initial energy dependent.
     Qnow[:] .= q
