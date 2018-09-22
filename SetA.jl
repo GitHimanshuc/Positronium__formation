@@ -177,12 +177,12 @@ function simulate( energy = 5000.0, N = 10000, para = rand(10); MMM::Int = 1 , d
     position_vector = Array{Float64}(N,3) # Will be used to hold the final 3D position of the positrons before annhilation
     arrtime_low = Array{Float64}(N)
     varposition_vector = zeros(3) # Will hold the current position vector because I am not sure if accesing array every time inside the while loop is efficient
-    vma =v1=vc=v2=g1=g2= @MVector zeros(3)
-    # v1 = @MVector [0.0,0.0,0.0]
-    # vc = @MVector [0.0,0.0,0.0]
-    # v2 = @MVector [0.0,0.0,0.0]
-    # g1 = @MVector [0.0,0.0,0.0]
-    # g2 = @MVector [0.0,0.0,0.0]
+    vma = @MVector zeros(3)
+    v1 = @MVector zeros(3)
+    vc = @MVector zeros(3)
+    v2 = @MVector zeros(3)
+    g1 = @MVector zeros(3)
+    g2 = @MVector zeros(3)
     #arrcurrene = rand(N)*energy
 
     thermal_temp_energy = temp/1e4   # Approximately the thermal energy.
@@ -341,7 +341,7 @@ end
 psformation = Array{Float64}(1) # To store ps formation percentage
 
 q = 1.0
-particles = 5000
+particles = 5000*3
 varenergy = 10000
 vardensity = 3.5e7
 vartemp = 75.0
@@ -424,87 +424,87 @@ array_elasfalse = array_elasfalse/varfactor3
 if paranow == arrparaA
     plot(variation_paraA, array_ps,xlabel = "Relative Magnitude of ionization cross section",ylabel = "Percentage Positronium formed",label = "With recoil")
     plot!(variation_paraA, array_psfalse,shape = :circle,label = "Without recoil")
-    savefig("C:\\Users\\Himanshu\\Desktop\\Report\\graphs\\SetA"*name)
+    savefig("C:\\Users\\Himanshu\\Desktop\\Report\\graphs\\SetA\\SetA"*name)
 
     plot(variation_paraA, array_ion,xlabel = "Relative Magnitude of ionization cross section",ylabel = "Number of events",label = "Ionizations With recoil")
     plot!(variation_paraA, array_elas,label = "Elastic With recoil/"*string(varfactor2))
     plot!(variation_paraA, array_ionfalse,label = "Ionizations Without recoil",shape = :circle)
     plot!(variation_paraA, array_elasfalse,label = "Elastic Without recoi/"*string(varfactor3),shape = :circle)
-    savefig("C:\\Users\\Himanshu\\Desktop\\Report\\graphs\\SetA"*name*"_collsions")
+    savefig("C:\\Users\\Himanshu\\Desktop\\Report\\graphs\\SetA\\SetA"*name*"_collsions")
 
     plot(variation_paraA, array_thermalization_time,xlabel = "Relative Magnitude of ionization cross section",ylabel = "Time (years)",label = "Thermalization time")
     plot!(variation_paraA, array_timelow,label = "Time_low*"*string(varfactor)*" with recoil")
     plot!(variation_paraA, array_timelowfalse,label = "Time_low*"*string(varfactor)*" Without recoil",shape = :circle)
-    savefig("C:\\Users\\Himanshu\\Desktop\\Report\\graphs\\SetA"*name*"_times")
+    savefig("C:\\Users\\Himanshu\\Desktop\\Report\\graphs\\SetA\\SetA"*name*"_times")
 
 
 
     varsomething = Integer(length(array_energylow[:,1])/2)
     histogram(array_energylow[varsomething,:],label="with recoil",xlabel = "Energy(eV)",alpha = .5)
     histogram!(array_energylowfalse[varsomething,:],label="without recoil",alpha = .5)
-    savefig("C:\\Users\\Himanshu\\Desktop\\Report\\graphs\\SetA"*name*"_energy_distribution_on_forming_Ps")
+    savefig("C:\\Users\\Himanshu\\Desktop\\Report\\graphs\\SetA\\SetA"*name*"_energy_distribution_on_forming_Ps")
 
 
     histogram(array_energylow[varsomething,array_energylow[varsomething,:].<varpsthresh],label="with recoil",xlabel = "Energy(eV)",alpha = .5)
     histogram!(array_energylowfalse[varsomething,array_energylowfalse[varsomething,:].<varpsthresh],label="without recoil",alpha = .5)
-    savefig("C:\\Users\\Himanshu\\Desktop\\Report\\graphs\\SetA"*name*"_energy_distribution_below_psthresh")
+    savefig("C:\\Users\\Himanshu\\Desktop\\Report\\graphs\\SetA\\SetA"*name*"_energy_distribution_below_psthresh")
 
 end
 
 if paranow == arrparal
     plot(variation_paral, array_ps,xlabel = "Parameter lambda of ionization cross section",ylabel = "Percentage Positronium formed",label = "With recoil")
     plot!(variation_paral, array_psfalse,shape = :circle,label = "Without recoil")
-    savefig("C:\\Users\\Himanshu\\Desktop\\Report\\graphs\\SetA"*name)
+    savefig("C:\\Users\\Himanshu\\Desktop\\Report\\graphs\\SetA\\SetA"*name)
 
     plot(variation_paral, array_ion,xlabel = "Parameter lambda of ionization cross section",ylabel = "Number of events",label = "Ionizations With recoil")
     plot!(variation_paral, array_elas,label = "Elastic With recoil/"*string(varfactor2))
     plot!(variation_paral, array_ionfalse,label = "Ionizations Without recoil",shape = :circle)
     plot!(variation_paral, array_elasfalse,label = "Elastic Without recoil/"*string(varfactor3),shape = :circle)
-    savefig("C:\\Users\\Himanshu\\Desktop\\Report\\graphs\\SetA"*name*"_collsions")
+    savefig("C:\\Users\\Himanshu\\Desktop\\Report\\graphs\\SetA\\SetA"*name*"_collsions")
 
     plot(variation_paral, array_thermalization_time,xlabel = "Parameter lambda of ionization cross section",ylabel = "Time (years)",label = "Thermalization time")
     plot!(variation_paral, array_timelow,label = "Time_low*"*string(varfactor)*" with recoil")
     plot!(variation_paral, array_timelowfalse,label = "Time_low*"*string(varfactor)*" Without recoil",shape = :circle)
-    savefig("C:\\Users\\Himanshu\\Desktop\\Report\\graphs\\SetA"*name*"_times")
+    savefig("C:\\Users\\Himanshu\\Desktop\\Report\\graphs\\SetA\\SetA"*name*"_times")
 
     varsomething = Integer(length(array_energylow[:,1])/2)
     histogram(array_energylow[varsomething,:],label="with recoil",xlabel = "Energy(eV)",alpha = .5)
     histogram!(array_energylowfalse[varsomething,:],label="without recoil",alpha = .5)
-    savefig("C:\\Users\\Himanshu\\Desktop\\Report\\graphs\\SetA"*name*"_energy_distribution_on_forming_Ps")
+    savefig("C:\\Users\\Himanshu\\Desktop\\Report\\graphs\\SetA\\SetA"*name*"_energy_distribution_on_forming_Ps")
 
 
     histogram(array_energylow[varsomething,array_energylow[varsomething,:].<varpsthresh],label="with recoil",xlabel = "Energy(eV)",alpha = .5)
     histogram!(array_energylowfalse[varsomething,array_energylowfalse[varsomething,:].<varpsthresh],label="without recoil",alpha = .5)
-    savefig("C:\\Users\\Himanshu\\Desktop\\Report\\graphs\\SetA"*name*"_energy_distribution_below_psthresh")
+    savefig("C:\\Users\\Himanshu\\Desktop\\Report\\graphs\\SetA\\SetA"*name*"_energy_distribution_below_psthresh")
 
 end
 
 if paranow ==arrparae
     plot(variation_parae, array_ps,xlabel = "Ionization threshold",ylabel = "Percentage Positronium formed",label = "With recoil")
     plot!(variation_parae, array_psfalse,shape = :circle,label = "Without recoil")
-    savefig("C:\\Users\\Himanshu\\Desktop\\Report\\graphs\\SetA"*name)
+    savefig("C:\\Users\\Himanshu\\Desktop\\Report\\graphs\\SetA\\SetA"*name)
 
     plot(variation_parae, array_ion,xlabel = "Ionization threshold",ylabel = "Number of events",label = "Ionizations With recoil")
     plot!(variation_parae, array_elas,label = "Elastic With recoil/"*string(varfactor2))
     plot!(variation_parae, array_ionfalse,label = "Ionizations Without recoil",shape = :circle)
     plot!(variation_parae, array_elasfalse,label = "Elastic Without recoil/"*string(varfactor3),shape = :circle)
-    savefig("C:\\Users\\Himanshu\\Desktop\\Report\\graphs\\SetA"*name*"_collsions")
+    savefig("C:\\Users\\Himanshu\\Desktop\\Report\\graphs\\SetA\\SetA"*name*"_collsions")
 
 
     plot(variation_parae, array_thermalization_time,xlabel = "Ionization threshold",ylabel = "Time (years)",label = "Thermalization time")
     plot!(variation_parae, array_timelow,label = "Time_low*"*string(varfactor)*" with recoil")
     plot!(variation_parae, array_timelowfalse,label = "Time_low*"*string(varfactor)*" Without recoil",shape = :circle)
-    savefig("C:\\Users\\Himanshu\\Desktop\\Report\\graphs\\SetA"*name*"_times")
+    savefig("C:\\Users\\Himanshu\\Desktop\\Report\\graphs\\SetA\\SetA"*name*"_times")
 
     varsomething = Integer(length(array_energylow[:,1])/2)
     histogram(array_energylow[varsomething,:],label="with recoil",xlabel = "Energy(eV)",alpha = .5)
     histogram!(array_energylowfalse[varsomething,:],label="without recoil",alpha = .5)
-    savefig("C:\\Users\\Himanshu\\Desktop\\Report\\graphs\\SetA"*name*"_energy_distribution_on_forming_Ps")
+    savefig("C:\\Users\\Himanshu\\Desktop\\Report\\graphs\\SetA\\SetA"*name*"_energy_distribution_on_forming_Ps")
 
 
     histogram(array_energylow[varsomething,array_energylow[varsomething,:].<varpsthresh],label="with recoil",xlabel = "Energy(eV)",alpha = .5)
     histogram!(array_energylowfalse[varsomething,array_energylowfalse[varsomething,:].<varpsthresh],label="without recoil",alpha = .5)
-    savefig("C:\\Users\\Himanshu\\Desktop\\Report\\graphs\\SetA"*name*"_energy_distribution_below_psthresh")
+    savefig("C:\\Users\\Himanshu\\Desktop\\Report\\graphs\\SetA\\SetA"*name*"_energy_distribution_below_psthresh")
 
 
 
