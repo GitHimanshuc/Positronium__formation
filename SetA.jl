@@ -3,7 +3,7 @@ using Distributions
 using Plots
 using StaticArrays
 using LinearAlgebra
-# using OtherFunctions
+# using OtherFunctions  # -> contians functions that model energy loss at higher energies.
 
 function surge_exp(x::Float64,xth::Float64,varp,varlambda::Float64)
 
@@ -23,36 +23,40 @@ function surge_poly(x,xth,varp,varlambda)
     end
 end
 
-
+# This function generates the final direction after isotropic scattering
 function final_scattering_energy_and_direction!( Ei , sigma_temp,tempa ,vma,v1,vc,v2,g1,g2)
-    # println("Inside here")
 
-    vma[1] = rand(Normal(0.0,sqrt(1.38e-23*tempa/1.67e-27)))
+    #Three velocity components of the ISM particle
+    vma[1] = rand(Normal(0.0,sqrt(1.38e-23*tempa/1.67e-27))) # m/s
     vma[2] = rand(Normal(0.0,sqrt(1.38e-23*tempa/1.67e-27)))
     vma[3] = rand(Normal(0.0,sqrt(1.38e-23*tempa/1.67e-27)))
 
-    mm = 1.67e-27    # Kg
-    m = 9.1e-31   # Kg
-    M = mm + m
-    Ei = Ei*1.6e-19
+
+    mm = 1.67e-27    # Kg   Proton mass
+    m = 9.1e-31   # Kg      Electron mass
+    M = mm + m           #  Mass of the whole system
+    Ei = Ei*1.6e-19  # initial energy converted to Joule
 
     v1 = sqrt(2*Ei/m)*sigma_temp  # m/s
 
-    vc = (m*v1 + mm*vma)/M
+    vc = (m*v1 + mm*vma)/M  # Center of mass velocity
 
-    g1 = v1 - vma
+    g1 = v1 - vma  # Velocity of positron wrt to the ISM particle
 
+    # Generation of uniformly distributed angles on the surface of a sphere
     θ = acos(1 -2*rand())
     ϕ = 2*pi*rand()
 
+    # Storing the final relative direction of motion of the positron
     g2[1] = norm(g1)*sin(θ)*cos(ϕ)
     g2[2] = norm(g1)*sin(ϕ)*sin(θ)
     g2[3] = norm(g1)*cos(θ)
 
-    v2 = (vc + mm/M*g2)
-    sigma_temp = v2/norm(v2)
 
-    return dot(v2,v2)*.5*m/1.6e-19
+    v2 = (vc + mm/M*g2) # Final velocity of the positron in the original frame
+    sigma_temp = v2/norm(v2) # Final direction of motion of the positron in the original frame
+
+    return dot(v2,v2)*0.5*m/1.6e-19  # The final energy of positron is returned in eV
 
 end
 
@@ -61,6 +65,10 @@ end
 function simulate( energy = 5000.0, N = 10000, para = rand(10); MMM::Int = 1 , dens::Float64 = 3.5e7, temp::Float64 = 75.0, Q::Float64 = 1.0,elastic_present=true)
 
 
+    # These variables store various parameters of the surge functions
+
+    #e.g.   Aion -> A_{ion}     ||      eion -> ϵ   ||  lion ->  λ
+    # ion -> ionization   ||  psf -> positron formation   || elas -> elastic   || exh -> Excitation
 
     Aelas = para[1]   #Armstrong squared
     Aion = para[2]
@@ -82,29 +90,30 @@ function simulate( energy = 5000.0, N = 10000, para = rand(10); MMM::Int = 1 , d
 
 
 
-    Q = Q*1.0  # Energy share fraction with electron during ionization
-    #Not included as of now because at a time we only work with either high energy or low energy excitations
-    Aexl = 0.0
-    eexl = eexh
-    lexl = 1.0
+    Q = Q*1.0  # Energy share fraction with electron during ionization  Q = 1.0 no energy is taken away by the electron after the ionization
+
+
+
+
+    # Not included as of now because at a time we only work with either high energy or low energy excitations
+    # Aexl = 0.0
+    # eexl = eexh
+    # lexl = 1.0
 
 
 
 
     # println("------------------------------------------------------------------------")
-    # #Astronomical data
+    # Astronomical data
     # println("The density of ISM is : ",dens," Particles per meter cubed")  #particle per m^3           #density of ISM                     #right now it is CNM
     # println("The temperature of ISM is : ",temp," Kelvin")   #in kelvin                    #temperature of ISM
 
 
 
-    mass_ratio = 1/1835 #a ratio                      #ratio of mass of the positron and molecule/atom
+    mass_ratio = 1/1835      #ratio of mass of the positron and molecule/atom
 
 
     # rng = MersenneTwister(124)   #""" fixing the seed for some unknown reason """
-
-
-
 
 
 
@@ -135,18 +144,20 @@ function simulate( energy = 5000.0, N = 10000, para = rand(10); MMM::Int = 1 , d
 
 
     posfor = 0   #""" To count the number of positroniums formed """
-    collcount = 0   #""" Number of collision, will be divided by the number of particles to get the average number of collisions """
+    collcount = 0   #Number of elastic collisions
     excount = 0   #"""counting total number of excitations """
     dirioncount = 0   #""" Counting total number of ionizations """
-    othcount = 0   #""" There were cases where nothing happened, i.e. all the cross sections at that energy ended up being 0, but this will lead to an infinite loop as our medium is infinite for now. These cases were checked for and this variable keeps track of these events """
 
-    a = 0.0   #""" Just a variable that will be used to temporarily store a randomly generated number """
+    # Not relevant for the modelled data
+    #othcount = 0   #""" There were cases where nothing happened, i.e. all the cross sections at that energy ended up being 0, but this will lead to an infinite loop as our medium is infinite for now. These cases were checked for and this variable keeps track of these events """
+
+    a = 0.0   #"""it will be used to temporarily store a randomly generated number """
     currene = energy   #""" A temporary variable to store the current energy  """
 
 
-    thresholdps = 0.0   #""" Positronium threshold """
-    thresholdex = 0.0   #""" Excitation threshold """
-    thresholddi = 0.0   #""" Direct ionization threshold """
+    thresholdps = 0.0   #""" Positronium cross_section """
+    thresholdex = 0.0   #""" Excitation cross_section """
+    thresholddi = 0.0   #""" Direct ionization cross_section """
 
 
 
@@ -158,53 +169,45 @@ function simulate( energy = 5000.0, N = 10000, para = rand(10); MMM::Int = 1 , d
 
 
 
-
-    vm = sqrt(temp*3*8.314*1000/MMM)     #velocity of molecules/atoms of the ISM in meters/second   (Change according to the dimension the simulation is running in)
-    em = 0.5*MMM*1.67e-27*vm^2/(1.6e-19)                #some weird energy to be used in the thermalization formula (eV)
-    varratio = mass_ratio/(1+mass_ratio)^2
-
-
-
     arrcurrene = rand(Normal(energy, psthresh*2), N)    #This array_ stores the energy distribution / The positron energy will be sampled form this array_
     arrinitial_sigma = 2*rand(N,3) .-1 # normalization is Required
     # Normalizing the sigma's norm to 1
-    norm  = arrinitial_sigma[:,1].*arrinitial_sigma[:,1]+arrinitial_sigma[:,2].*arrinitial_sigma[:,2]+arrinitial_sigma[:,3].*arrinitial_sigma[:,3]
-    arrinitial_sigma = arrinitial_sigma[:,:]./sqrt.(norm[:]) # somehow it works
+    normalization  = arrinitial_sigma[:,1].*arrinitial_sigma[:,1]+arrinitial_sigma[:,2].*arrinitial_sigma[:,2]+arrinitial_sigma[:,3].*arrinitial_sigma[:,3]
+    arrinitial_sigma = arrinitial_sigma[:,:]./sqrt.(normalization[:]) # somehow it works
 
     sigma = [0.0,0.0,0.0] # Will store the direction cosine
     velocity_vector = [.0,.0,.0] # Will hold the current velocity.
-    varalpha = 0.0 # Will store the factor multiplied by which we will get the velocity vector from the direction cosine
 
-    position_vector = zeros(N,3) # Will be used to hold the final 3D position of the positrons before annhilation
-    arrtime_low = zeros(N)
-    varposition_vector = zeros(3) # Will hold the current position vector because I am not sure if accesing array_ every time inside the while loop is efficient
+    # position_vector = zeros(N,3) # Will be used to hold the final 3D position of the positrons before annhilation
+    # varposition_vector = zeros(3) # Will hold the current position vector because I am not sure if accesing array_ every time inside the while loop is efficient
+
+
+    # The following parameters will be used in the calculation of the final scattering angle
     vma = @MVector zeros(3)
     v1 = @MVector zeros(3)
     vc = @MVector zeros(3)
     v2 = @MVector zeros(3)
     g1 = @MVector zeros(3)
     g2 = @MVector zeros(3)
-    #arrcurrene = rand(N)*energy
 
-    thermal_temp_energy = temp/1e4   # Approximately the thermal energy.
+    stopping_energy = temp/1e4   # Approximately the thermal energy of the ISM particles. If energy falls below this it is assumed that the positron is thermalized.
 
-    stopping_energy = thermal_temp_energy
 
-    if !elastic_present  # If elastic collisions are absent set the thershold to be the positron formation threshold otherwise the code may never stop.
+    if !elastic_present  # If elastic collisions are absent set the thershold energy to be the positron formation threshold otherwise the code may never stop.
         stopping_energy = psthresh
     end
 
     flag = true
     ps_formed_flag = false
-    arr_timelow = zeros(N)
-    arr_energylow = zeros(N)
+    arr_timelow = zeros(N) # Will store the time at which a positron either formed positronium or fell below the ps formation threshold.
+    arr_energylow = zeros(N)  # Will store the energy at which a positron either formed positronium or fell below the ps formation threshold.
 
 
 
 
-    avgtime_num = 0
-    temp_elascount = 0
-    only_non_ps_elascount = 0.0
+    only_non_ps_elascount = 0.0 # Will store the average number of elastic collision a positron goes through before thermalizing.
+    avgtime_num = 0 # Stores the number of positrons that did not form positronium. Used in calculating thermalization time and average number of elastic collision.
+    temp_elascount = 0 # A temporary variable that will store the number of elastic collisions the last positron went through.
 
     for i in 1:N   #""" THE loop """
 
@@ -222,33 +225,31 @@ function simulate( energy = 5000.0, N = 10000, para = rand(10); MMM::Int = 1 , d
         temptime = 0.0
         temp_elascount = 0
 
+
         while currene >= stopping_energy   #""" Simulates life of a particle """
 
 
 
 
 
-            # Without extrapolation
-            ########################################################################################################
-            ########################################################################################################
             thresholdps = Apsf*surge_exp(currene,epsf,pps,lpsf)
             thresholddi = Aion*surge_poly(currene,eion,pion,lion)   #Storing the relevant cross sections in temporary variables
             thresholdex = Aexh*surge_poly(currene,eexh,pex,lexh)
             elas = Aelas*surge_poly(currene,eelas,pelas,lelas)
-            a = rand()   #""" Random number to be used in simulation """
             total_cross = elas + thresholdps + thresholddi + thresholdex
+            a = rand()   #""" Random number to be used in simulation """
             a = a*total_cross # Normalizing
 
 
             #Warning:
-            #Do not use the same random number in tempvar and for checking the type of interaction
-            #else the correlation will give an additional 2% positron formation.
-            v0 = sqrt((2*currene*1.6e-19)/(9.1e-31))  #velocity in meter/second
+            #Do not use the same random number in tempvar and for checking the type of interaction else the correlation will give an additional 2% positron formation.
+            v0 = sqrt((2*currene*1.6e-19)/(9.1e-31))  #velocity of positron in meter/second
 
             tempvar = -log(rand())/(total_cross*dens*1e-20)  # The distance covered before the next interaction
 
-            # varposition_vector = varposition_vector+sigma*tempvar
-            temptime = temptime + tempvar/v0
+            # varposition_vector = varposition_vector+sigma*tempvar     # Final 3D position
+
+            temptime = temptime + tempvar/v0         # Time positron travelled for before the next _collision
             ########################################################################################################################
 
 
@@ -260,8 +261,7 @@ function simulate( energy = 5000.0, N = 10000, para = rand(10); MMM::Int = 1 , d
                 posfor = posfor + 1
                 arr_energylow[i] = currene
                 arr_timelow[i]  = temptime
-                ps_formed_flag = true
-                # println(currene)
+                ps_formed_flag = true    # True means that the positron formed and False implies that the positron fell below the stopping_energy = thermalization energy
                 break
             elseif a < (thresholdps + thresholddi)
                 dirioncount = dirioncount + 1
@@ -271,62 +271,65 @@ function simulate( energy = 5000.0, N = 10000, para = rand(10); MMM::Int = 1 , d
                 excount = excount + 1
                 currene = currene - exthresh
             else
-                collcount = collcount + 1
+                collcount = collcount + 1    # This counts the number of elastic collision
+                # There is no energy loss due to elastic collision until elastic_present is set to True
                 temp_elascount += 1
             end
 
 
-            # print(currene,"  ->  ")
             if elastic_present
-                currene =final_scattering_energy_and_direction!(currene,sigma,temp,vma,v1,vc,v2,g1,g2) # Right now we are using the isotropic scattering case.
+                # If elastic_present is set to True then every collision event (ionization/excitations) is also treated as an elastic collision and energy loss takes place. But these collision are not counted as elastic collision/collcount is not incremented.
+                currene = final_scattering_energy_and_direction!(currene,sigma,temp,vma,v1,vc,v2,g1,g2) # Right now we are using the isotropic scattering case.
+            else
+                # If elastic_present is False but we want to track 3D movement then the following line can be uncommented. This will not change the energy but the direction cosine will be updated.
+                # final_scattering_energy_and_direction!(currene,sigma,temp,vma,v1,vc,v2,g1,g2)
             end
 
 
+
+            # The following segment stores the distribution of positron energy as they fall below ps formation threshold (The same array also stores the energy at which positrons formed positronium (in the if section of ps formation).). A part of this information is used to generate the histograms.
+            # This is not storing the final energy of thermalized positrons.
             if flag && (currene < psthresh)
                 arr_energylow[i] = currene
-                arr_timelow[i]  = temptime
+                arr_timelow[i]  = temptime  # This is the time it takes for the positron to fall below ps thershold (The same array also stores the time at which the positron formed positronium (in the if section of ps formation).). (is good approximation to the median life time of a positron.)
                 flag = false
             end
 
 
 
-
-
-
-
         end
 
+
+        # The following segment calculates the average time it takes for a positron to fall below the stopping_energy/thermalization energy, which a least give some idea about the thermalization time.
+        # It also counts the number of elastic collisions that a positron undergoes before falling below the stopping_energy/thermalization energy.
+        # In calculating the average we are only considering the positrons that did not form positronium. If we average over all the positrons then the results obtained will be very small, because positron spend a considerable time before thermalizing after falling below ps formation threshold.
+        # If elastic_present is set to False then we only calculate the number of collisions and time it take to fall below ps threshold, which are not that meaningful.
         if !ps_formed_flag
-            avgtime_num += 1
-            avgtime = (avgtime_num-1)*avgtime/avgtime_num + temptime/avgtime_num
-            only_non_ps_elascount = only_non_ps_elascount*(avgtime_num-1)/avgtime_num + temp_elascount/avgtime_num
+            avgtime_num += 1         # Number of positrons that did not form positronium
+            avgtime = (avgtime_num-1)*avgtime/avgtime_num + temptime/avgtime_num   # Average thermalization time
+            only_non_ps_elascount = only_non_ps_elascount*(avgtime_num-1)/avgtime_num + temp_elascount/avgtime_num   # Average number of elastic collision before thermalizing
 
         end
 
 
     end
 
-
+    # Uncomment the required lines if individual runs are to be monitered
     # println("\n\nThe results are:\n\n")
     # println("Postronium formed:")
-    # print((posfor)/N*100)
-    # println("%")
+    # print((posfor)/N*100,"%\n")
     # println("Average direct ionization count is:")
     # println((dirioncount)/N)
-    # # println("Average number of excitations:")
-    # # println((excount/N))
+    # println("Average number of excitations:")
+    # println((excount/N))
     # println("Avearage number of elastic collisions:")
     # println((collcount)/N)
     # println("Average distance travelled is:")
-    # print(avgdist/(3.086e16))
-    # println(" Pc")
+    # print(avgdist/(3.086e16), " Pc\n")
     # println("Average time travelled for is:")
-    # print(avgtime/31536000)
-    # println(" Years")
+    # print(avgtime/31536000,"Years\n")
     # println("Average number of others:")
     # println((othcount/N),"\n\n")
-    # println(arrtime_low[1:10])
-    # return (posfor)/N*100,dirioncount/N,collcount/N,mean(arrtime_low)/31536000,avgtime/31536000
 
 
     return (posfor)/N*100,dirioncount/N,only_non_ps_elascount,avgtime/31536000,mean(arr_timelow)/31536000,arr_energylow
@@ -339,20 +342,31 @@ end
 
 
 
-psformation = zeros(1) # To store ps formation percentage
-dir_path = "/home/himanshu/Desktop/graphdel/"
-q = 1.0
-particles = 5000*3
-varenergy = 10000
-vardensity = 3.5e7
-vartemp = 75.0
+psformation = 0.0 # To store ps formation percentage
+q = 1.0   # value of Q
+particles = 5000*4  # Number of particle per graph
+varenergy = 10000   # Starting average energy
+vardensity = 3.5e7  # Density of ISM
+vartemp = 75.0      # temperature of ISM
 
 
 
 #para = [Aelas, Aion, eion, lion, Apsf, epsf, lpsf, Aexh, eexh, lexh]
 para = [1.0,0.30,13.6,30.0,1.0,6.8,7.0,0.0,10.0,12.0]
+
+
+# psformation = simulate(varenergy , particles, para, MMM = 1 , dens = vardensity, temp = vartemp, Q=q,elastic_present=true)
+
+###############################################################################
+###############################################################################
+#Everything after this is plotting related for individual runs Uncomment the above simulate function call
+
+
+
+
+dir_path = "/home/himanshu/Desktop/graphdel/"   # Path of the folder that will store the graphs. This folder should contian three folders named SetA,SetB,SetC.
 varpsthresh = para[6]
-varnum = 10  #NUmber of points the parmeter should be divided into
+varnum = 10  #Number of points the parmeter should be divided into = Number of points in each graph
 
 
 
@@ -362,7 +376,7 @@ array_elas = zeros(varnum)
 array_timelow = zeros(varnum)
 array_thermalization_time = zeros(varnum)
 array_energylow = zeros(varnum,particles+1)
-array_energylow[varnum,particles + 1] = 0.3145
+array_energylow[varnum,particles + 1] = 0.3145   # If ps formation was 100% the histogram plotting code gave error, this single random value is to prevent that.
 
 array_psfalse = zeros(varnum)
 array_ionfalse = zeros(varnum)
@@ -393,11 +407,14 @@ for i in 1:varnum
     arrparae[i,3] = variation_parae[i]  #lion
 end
 
-for k in 1:10
+
+number_of_Q_values = 10  #->  Number of Q values each set of parameters should be plotted against.
+
+for k in 1:number_of_Q_values
 
     paranow = arrparaA
     name = "A"
-    q = k/20.0 + 0.5
+    q = k/(number_of_Q_values*2.0) + 0.5  # Below 0.5 the values become initial energy dependent.
     Qnow[:] .= q
     name  = name*" "
 
@@ -431,7 +448,7 @@ for k in 1:10
         plot!(variation_paraA, array_elas,label = "Elastic With recoil/"*string(varfactor2))
         plot!(variation_paraA, array_ionfalse,label = "Ionizations Without recoil",shape = :circle)
         plot!(variation_paraA, array_elasfalse,label = "Elastic Without recoi/"*string(varfactor3),shape = :circle)
-        savefig(dir_path*"SetA/SetA"*name*"Q = $q "*"_collsions")
+        savefig(dir_path*"SetA/SetA"*name*"Q = $q "*"_collisions")
 
         plot(variation_paraA, array_thermalization_time,xlabel = "Q = $q Relative Magnitude of ionization cross section",ylabel = "Time (years)",label = "Thermalization time")
         plot!(variation_paraA, array_timelow,label = "Time_low*"*string(varfactor)*" with recoil")
@@ -461,7 +478,7 @@ for k in 1:10
         plot!(variation_paral, array_elas,label = "Elastic With recoil/"*string(varfactor2))
         plot!(variation_paral, array_ionfalse,label = "Ionizations Without recoil",shape = :circle)
         plot!(variation_paral, array_elasfalse,label = "Elastic Without recoil/"*string(varfactor3),shape = :circle)
-        savefig(dir_path*"SetA/SetA"*name*"Q = $q "*"_collsions")
+        savefig(dir_path*"SetA/SetA"*name*"Q = $q "*"_collisions")
 
         plot(variation_paral, array_thermalization_time,xlabel = "Q = $q Parameter lambda of ionization cross section",ylabel = "Time (years)",label = "Thermalization time")
         plot!(variation_paral, array_timelow,label = "Time_low*"*string(varfactor)*" with recoil")
@@ -489,7 +506,7 @@ for k in 1:10
         plot!(variation_parae, array_elas,label = "Elastic With recoil/"*string(varfactor2))
         plot!(variation_parae, array_ionfalse,label = "Ionizations Without recoil",shape = :circle)
         plot!(variation_parae, array_elasfalse,label = "Elastic Without recoil/"*string(varfactor3),shape = :circle)
-        savefig(dir_path*"SetA/SetA"*name*"Q = $q "*"_collsions")
+        savefig(dir_path*"SetA/SetA"*name*"Q = $q "*"_collisions")
 
 
         plot(variation_parae, array_thermalization_time,xlabel = "Q = $q Ionization threshold",ylabel = "Time (years)",label = "Thermalization time")
