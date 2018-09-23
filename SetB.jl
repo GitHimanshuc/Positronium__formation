@@ -52,7 +52,7 @@ function final_scattering_energy_and_direction!( Ei , sigma_temp,tempa ,vma,v1,v
     v2 = (vc + mm/M*g2)
     sigma_temp = v2/norm(v2)
 
-    return dot(v2,v2)*.5*m/1.6e-19
+    return dot(v2,v2)*0.5*m/1.6e-19
 
 end
 
@@ -165,11 +165,11 @@ function simulate( energy = 5000.0, N = 10000, para = rand(10); MMM::Int = 1 , d
 
 
 
-    arrcurrene = rand(Normal(energy, psthresh*2), N)    #This array stores the energy distribution / The positron energy will be sampled form this array
+    arrcurrene = rand(Normal(energy, 1000), N)    #This array stores the energy distribution / The positron energy will be sampled form this array
     arrinitial_sigma = 2*rand(N,3) .-1 # normalization is Required
     # Normalizing the sigma's norm to 1
-    norm  = arrinitial_sigma[:,1].*arrinitial_sigma[:,1]+arrinitial_sigma[:,2].*arrinitial_sigma[:,2]+arrinitial_sigma[:,3].*arrinitial_sigma[:,3]
-    arrinitial_sigma = arrinitial_sigma[:,:]./sqrt.(norm[:]) # somehow it works
+    normalization  = arrinitial_sigma[:,1].*arrinitial_sigma[:,1]+arrinitial_sigma[:,2].*arrinitial_sigma[:,2]+arrinitial_sigma[:,3].*arrinitial_sigma[:,3]
+    arrinitial_sigma = arrinitial_sigma[:,:]./sqrt.(normalization[:]) # somehow it works
 
     sigma = [0.0,0.0,0.0] # Will store the direction cosine
     velocity_vector = [.0,.0,.0] # Will hold the current velocity.
@@ -340,7 +340,7 @@ end
 psformation = zeros(1) # To store ps formation percentage
 dir_path = "/home/himanshu/Desktop/graphdel/"
 q = 1.0
-particles = 5000*4
+particles = 5000*10
 varenergy = 10000
 vardensity = 3.5e7
 vartemp = 75.0
@@ -407,14 +407,14 @@ end
 println("--------------------------------------------------------------------------------------------------------")
 
 
-varfactor = floor(Int,maximum(array_thermalization_time)/maximum(array_timelow))+1.0
-@. array_timelow = array_timelow*varfactor
-@. array_timelowfalse = array_timelowfalse*varfactor
+varfactor = floor(Int,maximum(arraythermalization_time)/maximum(arraytimelow))+1.0
+@. arraytimelow = arraytimelow*varfactor
+@. arraytimelowfalse = arraytimelowfalse*varfactor
 
-varfactor2 = floor(Int,maximum(array_elas)/maximum(array_ion))+1.0
-@. array_elas = array_elas/varfactor2
-varfactor3 = floor(Int,maximum(array_elasfalse)/maximum(array_ion))+1.0
-@. array_elasfalse = array_elasfalse/varfactor3
+varfactor2 = floor(Int,maximum(arrayelas)/maximum(arrayion))+1.0
+@. arrayelas = arrayelas/varfactor2
+varfactor3 = floor(Int,maximum(arrayelasfalse)/maximum(arrayion))+1.0
+@. arrayelasfalse = arrayelasfalse/varfactor3
 
 
 
@@ -428,7 +428,7 @@ if paranow == arrparaA
     plot!(variation_paraA, arrayelas,label = "Elastic With recoil/"*string(varfactor2))
     plot!(variation_paraA, arrayionfalse,label = "Ionizations Without recoil",shape = :circle)
     plot!(variation_paraA, arrayelasfalse,label = "Elastic Without recoi/"*string(varfactor3),shape = :circle)
-    savefig(dir_path*"SetB/SetB"*name*"Q = $q "*"_collsions")
+    savefig(dir_path*"SetB/SetB"*name*"Q = $q "*"_collisions")
 
     plot(variation_paraA, arraythermalization_time,xlabel = "Q = $q Relative Magnitude of ionization cross section",ylabel = "Time (years)",label = "Thermalization time")
     plot!(variation_paraA, arraytimelow,label = "Time_low*"*string(varfactor)*" with recoil")
@@ -458,7 +458,7 @@ if paranow == arrparal
     plot!(variation_paral, arrayelas,label = "Elastic With recoil/"*string(varfactor2))
     plot!(variation_paral, arrayionfalse,label = "Ionizations Without recoil",shape = :circle)
     plot!(variation_paral, arrayelasfalse,label = "Elastic Without recoil/"*string(varfactor3),shape = :circle)
-    savefig(dir_path*"SetB/SetB"*name*"Q = $q "*"_collsions")
+    savefig(dir_path*"SetB/SetB"*name*"Q = $q "*"_collisions")
 
     plot(variation_paral, arraythermalization_time,xlabel = "Q = $q Parameter lambda of ionization cross section",ylabel = "Time (years)",label = "Thermalization time")
     plot!(variation_paral, arraytimelow,label = "Time_low*"*string(varfactor)*" with recoil")
@@ -486,7 +486,7 @@ if paranow ==arrparae
     plot!(variation_parae, arrayelas,label = "Elastic With recoil/"*string(varfactor2))
     plot!(variation_parae, arrayionfalse,label = "Ionizations Without recoil",shape = :circle)
     plot!(variation_parae, arrayelasfalse,label = "Elastic Without recoil/"*string(varfactor3),shape = :circle)
-    savefig(dir_path*"SetB/SetB"*name*"Q = $q "*"_collsions")
+    savefig(dir_path*"SetB/SetB"*name*"Q = $q "*"_collisions")
 
 
     plot(variation_parae, arraythermalization_time,xlabel = "Q = $q Ionization threshold",ylabel = "Time (years)",label = "Thermalization time")

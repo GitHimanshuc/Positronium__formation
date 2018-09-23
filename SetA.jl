@@ -169,7 +169,7 @@ function simulate( energy = 5000.0, N = 10000, para = rand(10); MMM::Int = 1 , d
 
 
 
-    arrcurrene = rand(Normal(energy, psthresh*2), N)    #This array_ stores the energy distribution / The positron energy will be sampled form this array_
+    arrcurrene = rand(Normal(energy, 1000), N)    #This array_ stores the energy distribution / The positron energy will be sampled form this array_
     arrinitial_sigma = 2*rand(N,3) .-1 # normalization is Required
     # Normalizing the sigma's norm to 1
     normalization  = arrinitial_sigma[:,1].*arrinitial_sigma[:,1]+arrinitial_sigma[:,2].*arrinitial_sigma[:,2]+arrinitial_sigma[:,3].*arrinitial_sigma[:,3]
@@ -344,7 +344,7 @@ end
 
 psformation = 0.0 # To store ps formation percentage
 q = 1.0   # value of Q
-particles = 5000*4  # Number of particle per graph
+particles = 5000*10  # Number of particle per graph
 varenergy = 10000   # Starting average energy
 vardensity = 3.5e7  # Density of ISM
 vartemp = 75.0      # temperature of ISM
