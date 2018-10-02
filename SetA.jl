@@ -142,7 +142,6 @@ function simulate( energy = 5000.0, N = 10000, para = rand(10); MMM::Int = 1 , d
 
 
 
-
     posfor = 0   #""" To count the number of positroniums formed """
     collcount = 0   #Number of elastic collisions
     excount = 0   #"""counting total number of excitations """
@@ -395,7 +394,7 @@ variation_Q = collect(0:1/varnum:1)[2:end]
 Qnow  = variation_Q
 variation_paraA = collect(0:1.5/varnum:1.5)[2:end]   # Variation of the amplitude
 variation_paral = collect(10:(45-10)/varnum:45)[2:end]   # Variation of the falling rate
-variation_parae = collect(1:(40-1)/varnum:40)[2:end]   # Variation of the Excitation threshold
+variation_parae = collect(1:(40-1)/varnum:40)[2:end]   # Variation of the Ionization threshold
 
 
 for i in 1:varnum
@@ -408,16 +407,16 @@ for i in 1:varnum
 end
 
 
-number_of_Q_values = 10  #->  Number of Q values each set of parameters should be plotted against.
+number_of_Q_values = 5  #->  Number of Q values each set of parameters should be plotted against.
 
 for k in 1:number_of_Q_values
-    
+
     # Uncomment anyone of these three to get plots containing the respective variation of parameter.
     paranow = arrparaA
     #paranow = arrparae
     #paranow = arrparal
-    
-    
+
+
     name = "A"
     q = k/(number_of_Q_values*2.0) + 0.5  # Below 0.5 the values become initial energy dependent.
     Qnow[:] .= q

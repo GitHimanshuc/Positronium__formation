@@ -383,19 +383,19 @@ variation_parae = collect(6.8:(30-6.8)/varnum:30)[2:end]   # Variation of the Ex
 
 for i in 1:varnum
     arrparaA[i,:] = para
-    arrparaA[i,2] = variation_paraA[i]  #Aion
+    arrparaA[i,8] = variation_paraA[i]  #Aexh
     arrparal[i,:] = para
-    arrparal[i,4] = variation_paral[i]  #lion
+    arrparal[i,10] = variation_paral[i]  #lexh
     arrparae[i,:] = para
-    arrparae[i,3] = variation_parae[i]  #lion
+    arrparae[i,9] = variation_parae[i]  #eexh
 end
 
-for k in 1:10
+for k in 1:5
 
 
-paranow = arrparaA
-name = "A"
-q = k/20.0 + 0.5
+paranow = arrparae
+name = "e"
+q = k/10.0 + 0.5
 Qnow[:] .=q
 name  = name*" "
 
@@ -420,17 +420,17 @@ varfactor3 = floor(Int,maximum(arrayelasfalse)/maximum(arrayion))+1.0
 
 
 if paranow == arrparaA
-    plot(variation_paraA, arrayps,xlabel = "Q = $q Relative Magnitude of ionization cross section",ylabel = "Percentage Positronium formed",label = "With recoil")
+    plot(variation_paraA, arrayps,xlabel = "Q = $q Relative Magnitude of excitation_high cross section",ylabel = "Percentage Positronium formed",label = "With recoil")
     plot!(variation_paraA, arraypsfalse,shape = :circle,label = "Without recoil")
     savefig(dir_path*"SetB/SetB"*name*"Q = $q ")
 
-    plot(variation_paraA, arrayion,xlabel = "Q = $q Relative Magnitude of ionization cross section",ylabel = "Number of events",label = "Ionizations With recoil")
+    plot(variation_paraA, arrayion,xlabel = "Q = $q Relative Magnitude of excitation_high cross section",ylabel = "Number of events",label = "excitation_high With recoil")
     plot!(variation_paraA, arrayelas,label = "Elastic With recoil/"*string(varfactor2))
-    plot!(variation_paraA, arrayionfalse,label = "Ionizations Without recoil",shape = :circle)
+    plot!(variation_paraA, arrayionfalse,label = "excitation_high Without recoil",shape = :circle)
     plot!(variation_paraA, arrayelasfalse,label = "Elastic Without recoi/"*string(varfactor3),shape = :circle)
     savefig(dir_path*"SetB/SetB"*name*"Q = $q "*"_collisions")
 
-    plot(variation_paraA, arraythermalization_time,xlabel = "Q = $q Relative Magnitude of ionization cross section",ylabel = "Time (years)",label = "Thermalization time")
+    plot(variation_paraA, arraythermalization_time,xlabel = "Q = $q Relative Magnitude of excitation_high cross section",ylabel = "Time (years)",label = "Thermalization time")
     plot!(variation_paraA, arraytimelow,label = "Time_low*"*string(varfactor)*" with recoil")
     plot!(variation_paraA, arraytimelowfalse,label = "Time_low*"*string(varfactor)*" Without recoil",shape = :circle)
     savefig(dir_path*"SetB/SetB"*name*"Q = $q "*"_times")
@@ -450,17 +450,17 @@ if paranow == arrparaA
 end
 
 if paranow == arrparal
-    plot(variation_paral, arrayps,xlabel = "Q = $q Parameter lambda of ionization cross section",ylabel = "Percentage Positronium formed",label = "With recoil")
+    plot(variation_paral, arrayps,xlabel = "Q = $q Parameter lambda of excitation_high cross section",ylabel = "Percentage Positronium formed",label = "With recoil")
     plot!(variation_paral, arraypsfalse,shape = :circle,label = "Without recoil")
     savefig(dir_path*"SetB/SetB"*name*"Q = $q ")
 
-    plot(variation_paral, arrayion,xlabel = "Q = $q Parameter lambda of ionization cross section",ylabel = "Number of events",label = "Ionizations With recoil")
+    plot(variation_paral, arrayion,xlabel = "Q = $q Parameter lambda of excitation_high cross section",ylabel = "Number of events",label = "excitation_high With recoil")
     plot!(variation_paral, arrayelas,label = "Elastic With recoil/"*string(varfactor2))
-    plot!(variation_paral, arrayionfalse,label = "Ionizations Without recoil",shape = :circle)
+    plot!(variation_paral, arrayionfalse,label = "excitation_high Without recoil",shape = :circle)
     plot!(variation_paral, arrayelasfalse,label = "Elastic Without recoil/"*string(varfactor3),shape = :circle)
     savefig(dir_path*"SetB/SetB"*name*"Q = $q "*"_collisions")
 
-    plot(variation_paral, arraythermalization_time,xlabel = "Q = $q Parameter lambda of ionization cross section",ylabel = "Time (years)",label = "Thermalization time")
+    plot(variation_paral, arraythermalization_time,xlabel = "Q = $q Parameter lambda of excitation_high cross section",ylabel = "Time (years)",label = "Thermalization time")
     plot!(variation_paral, arraytimelow,label = "Time_low*"*string(varfactor)*" with recoil")
     plot!(variation_paral, arraytimelowfalse,label = "Time_low*"*string(varfactor)*" Without recoil",shape = :circle)
     savefig(dir_path*"SetB/SetB"*name*"Q = $q "*"_times")
@@ -478,18 +478,18 @@ if paranow == arrparal
 end
 
 if paranow ==arrparae
-    plot(variation_parae, arrayps,xlabel = "Q = $q Ionization threshold",ylabel = "Percentage Positronium formed",label = "With recoil")
+    plot(variation_parae, arrayps,xlabel = "Q = $q excitation_high threshold",ylabel = "Percentage Positronium formed",label = "With recoil")
     plot!(variation_parae, arraypsfalse,shape = :circle,label = "Without recoil")
     savefig(dir_path*"SetB/SetB"*name*"Q = $q ")
 
-    plot(variation_parae, arrayion,xlabel = "Q = $q Ionization threshold",ylabel = "Number of events",label = "Ionizations With recoil")
+    plot(variation_parae, arrayion,xlabel = "Q = $q excitation_high threshold",ylabel = "Number of events",label = "excitation_high With recoil")
     plot!(variation_parae, arrayelas,label = "Elastic With recoil/"*string(varfactor2))
-    plot!(variation_parae, arrayionfalse,label = "Ionizations Without recoil",shape = :circle)
+    plot!(variation_parae, arrayionfalse,label = "excitation_high Without recoil",shape = :circle)
     plot!(variation_parae, arrayelasfalse,label = "Elastic Without recoil/"*string(varfactor3),shape = :circle)
     savefig(dir_path*"SetB/SetB"*name*"Q = $q "*"_collisions")
 
 
-    plot(variation_parae, arraythermalization_time,xlabel = "Q = $q Ionization threshold",ylabel = "Time (years)",label = "Thermalization time")
+    plot(variation_parae, arraythermalization_time,xlabel = "Q = $q excitation_high threshold",ylabel = "Time (years)",label = "Thermalization time")
     plot!(variation_parae, arraytimelow,label = "Time_low*"*string(varfactor)*" with recoil")
     plot!(variation_parae, arraytimelowfalse,label = "Time_low*"*string(varfactor)*" Without recoil",shape = :circle)
     savefig(dir_path*"SetB/SetB"*name*"Q = $q "*"_times")
