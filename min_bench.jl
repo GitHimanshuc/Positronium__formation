@@ -348,7 +348,8 @@ function simulate( energy = 5000.0, N = 10000, para = rand(10); MMM::Int = 1 , d
     # println((othcount/N),"\n\n")
 
 
-    return (posfor)/N*100,dirioncount/N,only_non_ps_elascount,excount/N, only_ps_elascount/posfor,avgtime,mean(arr_timelow),mean(arr_energylow)
+    # return (posfor)/N*100,dirioncount/N,only_non_ps_elascount,excount/N, only_ps_elascount/posfor,avgtime,mean(arr_timelow),arr_energylow
+    return (posfor)/N*100,dirioncount/N,only_non_ps_elascount,excount/N, only_ps_elascount/posfor,avgtime,mean(arr_timelow),mean(arr_energylow[arr_energylow .>psthresh])
 end
 
 
@@ -369,7 +370,7 @@ vartemp = 75.0
 
 
 #para = [Aelas, Aion, eion, lion, Apsf, epsf, lpsf, Aexh, eexh, lexh]
-para = [0.40,0.30,13.6,30.0,1.0,6.8,7.0,0.5,10.0,12.0]
+para = [0.40,0.30,13.6,30.0,1.0,6.8,7.0,0.60,2.0,10.0]
 varpsthresh = para[6]
 
 
@@ -380,9 +381,9 @@ varexc = 0.0
 varpselas = 0.0
 varthermalization_time = 0.0
 vartime_low = 0.0
-varenergy_low = 0.0
+varenergy_ps = 0.0
 
-@time varps,varion,varelas,varexc,varpselas, varthermalization_time,vartime_low,varenergy_low=simulate(varenergy , particles, para, MMM = 1 , dens = vardensity, temp = vartemp, Q=q,elastic_present=true)
+@time varps,varion,varelas,varexc,varpselas, varthermalization_time,vartime_low,varenergy_ps=simulate(varenergy , particles, para, MMM = 1 , dens = vardensity, temp = vartemp, Q=q,elastic_present=true)
 
 folder_path = "/home/himanshu/Desktop/julia_data/setB/"*string(Dates.now())
 mkdir(folder_path)
@@ -393,7 +394,9 @@ scaled_time1 = varthermalization_time*vardensity/1e15
 scaled_time2 = vartime_low*vardensity/1e15
 
 
-writedlm(file,hcat(100-varps,scaled_time2,varion,varpselas,varexc,varenergy_low,varelas,scaled_time1))
+writedlm(file,hcat(100-varps,scaled_time2,varion,varpselas,varexc,varenergy_ps,varelas,scaled_time1))
+
+println(100-varps," ",scaled_time2," ",varion," ",varpselas," ",varexc," ",varenergy_ps)
 
 
 
