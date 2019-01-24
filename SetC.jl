@@ -186,9 +186,9 @@ function simulate( energy = 5000.0, N = 10000, para = rand(10); MMM::Int = 1 , d
     g2 = @MVector zeros(3)
     #arrcurrene = rand(N)*energy
 
-    thermal_temp_energy = temp/1e4   # Approximately the thermal energy.
+    thermal_temp_energy = 0.6   # Approximately the thermal energy.
 
-    stopping_energy = thermal_temp_energy
+    stopping_energy = temp/1e4
 
     if !elastic_present  # If elastic collisions are absent set the thershold to be the positron formation threshold otherwise the code may never stop.
         stopping_energy = psthresh
@@ -265,8 +265,9 @@ function simulate( energy = 5000.0, N = 10000, para = rand(10); MMM::Int = 1 , d
                 break
             elseif a < (thresholdps + thresholddi)
                 dirioncount = dirioncount + 1
-                currene = currene - dirthresh
-                currene = Q*currene           # The fraction of energy shared with the emitted electron
+                qqq = rand()
+                ΔE = ((dirthresh/2)^(-1.1)*(1-qqq) + (currene - (dirthresh/2))^(-1.1)*qqq)^(1/(-1.1)) - (dirthresh/2)
+                currene = currene - dirthresh - ΔE
             elseif a < (thresholdps + thresholddi + thresholdex)
                 excount = excount + 1
                 currene = currene - exthresh
@@ -340,7 +341,7 @@ end
 psformation = zeros(1) # To store ps formation percentage
 dir_path = "/home/himanshu/Desktop/graphdel/"
 q = 1.0
-particles = 5000*10
+particles = 2000*10
 varenergy = 10000
 vardensity = 3.5e7
 vartemp = 75.0
@@ -391,11 +392,11 @@ for i in 1:varnum
     arrparae[i,9] = variation_parae[i]  #eexh
 end
 
-for k in 1:5
+for k in 1:1
 
 
-paranow = arrparal
-name = "l"
+paranow = arrparaA
+name = "A Q=distribution"
 q = k/10.0 + 0.5
 Qnow[:] .=q
 name  = name*" "
@@ -422,89 +423,89 @@ varfactor3 = floor(Int,maximum(arrayelasfalse)/maximum(arrayion))+1.0
 
 
 if paranow == arrparaA
-    plot(variation_paraA, arrayps,xlabel = "Q = $q Relative Magnitude of excitation_low cross section",ylabel = "Percentage Positronium formed",label = "With recoil")
+    plot(variation_paraA, arrayps,xlabel = " Relative Magnitude of excitation_low cross section",ylabel = "Percentage Positronium formed",label = "With recoil")
     plot!(variation_paraA, arraypsfalse,shape = :circle,label = "Without recoil")
-    savefig(dir_path*"SetC/SetC"*name*"Q = $q ")
+    savefig(dir_path*"SetC/SetC"*name*" ")
 
-    plot(variation_paraA, arrayion,xlabel = "Q = $q Relative Magnitude of excitation_low cross section",ylabel = "Number of events",label = "excitation_low With recoil")
+    plot(variation_paraA, arrayion,xlabel = " Relative Magnitude of excitation_low cross section",ylabel = "Number of events",label = "excitation_low With recoil")
     plot!(variation_paraA, arrayelas,label = "Elastic With recoil/"*string(varfactor2))
     plot!(variation_paraA, arrayionfalse,label = "excitation_low Without recoil",shape = :circle)
     plot!(variation_paraA, arrayelasfalse,label = "Elastic Without recoi/"*string(varfactor3),shape = :circle)
-    savefig(dir_path*"SetC/SetC"*name*"Q = $q "*"_collisions")
+    savefig(dir_path*"SetC/SetC"*name*" "*"_collisions")
 
-    plot(variation_paraA, arraythermalization_time,xlabel = "Q = $q Relative Magnitude of excitation_low cross section",ylabel = "Time (years)",label = "Thermalization time")
+    plot(variation_paraA, arraythermalization_time,xlabel = " Relative Magnitude of excitation_low cross section",ylabel = "Time (years)",label = "Thermalization time")
     plot!(variation_paraA, arraytimelow,label = "Time_low*"*string(varfactor)*" with recoil")
     plot!(variation_paraA, arraytimelowfalse,label = "Time_low*"*string(varfactor)*" Without recoil",shape = :circle)
-    savefig(dir_path*"SetC/SetC"*name*"Q = $q "*"_times")
+    savefig(dir_path*"SetC/SetC"*name*" "*"_times")
 
 
 
     varsomething = Integer(length(arrayenergylow[:,1])/2)
-    histogram(arrayenergylow[varsomething,:],label="with recoil",xlabel = "Q = $q Energy(eV)",alpha = .5)
+    histogram(arrayenergylow[varsomething,:],label="with recoil",xlabel = " Energy(eV)",alpha = .5)
     histogram!(arrayenergylowfalse[varsomething,:],label="without recoil",alpha = .5)
-    savefig(dir_path*"SetC/SetC"*name*"Q = $q "*"_energy_distribution_on_forming_Ps")
+    savefig(dir_path*"SetC/SetC"*name*" "*"_energy_distribution_on_forming_Ps")
 
 
-    histogram(arrayenergylow[varsomething,arrayenergylow[varsomething,:].<varpsthresh],label="with recoil",xlabel = "Q = $q Energy(eV)",alpha = .5)
+    histogram(arrayenergylow[varsomething,arrayenergylow[varsomething,:].<varpsthresh],label="with recoil",xlabel = " Energy(eV)",alpha = .5)
     histogram!(arrayenergylowfalse[varsomething,arrayenergylowfalse[varsomething,:].<varpsthresh],label="without recoil",alpha = .5)
-    savefig(dir_path*"SetC/SetC"*name*"Q = $q "*"_energy_distribution_below_psthresh")
+    savefig(dir_path*"SetC/SetC"*name*" "*"_energy_distribution_below_psthresh")
 
 end
 
 if paranow == arrparal
-    plot(variation_paral, arrayps,xlabel = "Q = $q Parameter lambda of excitation_low cross section",ylabel = "Percentage Positronium formed",label = "With recoil")
+    plot(variation_paral, arrayps,xlabel = " Parameter lambda of excitation_low cross section",ylabel = "Percentage Positronium formed",label = "With recoil")
     plot!(variation_paral, arraypsfalse,shape = :circle,label = "Without recoil")
-    savefig(dir_path*"SetC/SetC"*name*"Q = $q ")
+    savefig(dir_path*"SetC/SetC"*name*" ")
 
-    plot(variation_paral, arrayion,xlabel = "Q = $q Parameter lambda of excitation_low cross section",ylabel = "Number of events",label = "excitation_low With recoil")
+    plot(variation_paral, arrayion,xlabel = " Parameter lambda of excitation_low cross section",ylabel = "Number of events",label = "excitation_low With recoil")
     plot!(variation_paral, arrayelas,label = "Elastic With recoil/"*string(varfactor2))
     plot!(variation_paral, arrayionfalse,label = "excitation_low Without recoil",shape = :circle)
     plot!(variation_paral, arrayelasfalse,label = "Elastic Without recoil/"*string(varfactor3),shape = :circle)
-    savefig(dir_path*"SetC/SetC"*name*"Q = $q "*"_collisions")
+    savefig(dir_path*"SetC/SetC"*name*" "*"_collisions")
 
-    plot(variation_paral, arraythermalization_time,xlabel = "Q = $q Parameter lambda of excitation_low cross section",ylabel = "Time (years)",label = "Thermalization time")
+    plot(variation_paral, arraythermalization_time,xlabel = " Parameter lambda of excitation_low cross section",ylabel = "Time (years)",label = "Thermalization time")
     plot!(variation_paral, arraytimelow,label = "Time_low*"*string(varfactor)*" with recoil")
     plot!(variation_paral, arraytimelowfalse,label = "Time_low*"*string(varfactor)*" Without recoil",shape = :circle)
-    savefig(dir_path*"SetC/SetC"*name*"Q = $q "*"_times")
+    savefig(dir_path*"SetC/SetC"*name*" "*"_times")
 
     varsomething = Integer(length(arrayenergylow[:,1])/2)
-    histogram(arrayenergylow[varsomething,:],label="with recoil",xlabel = "Q = $q Energy(eV)",alpha = .5)
+    histogram(arrayenergylow[varsomething,:],label="with recoil",xlabel = " Energy(eV)",alpha = .5)
     histogram!(arrayenergylowfalse[varsomething,:],label="without recoil",alpha = .5)
-    savefig(dir_path*"SetC/SetC"*name*"Q = $q "*"_energy_distribution_on_forming_Ps")
+    savefig(dir_path*"SetC/SetC"*name*" "*"_energy_distribution_on_forming_Ps")
 
 
-    histogram(arrayenergylow[varsomething,arrayenergylow[varsomething,:].<varpsthresh],label="with recoil",xlabel = "Q = $q Energy(eV)",alpha = .5)
+    histogram(arrayenergylow[varsomething,arrayenergylow[varsomething,:].<varpsthresh],label="with recoil",xlabel = " Energy(eV)",alpha = .5)
     histogram!(arrayenergylowfalse[varsomething,arrayenergylowfalse[varsomething,:].<varpsthresh],label="without recoil",alpha = .5)
-    savefig(dir_path*"SetC/SetC"*name*"Q = $q "*"_energy_distribution_below_psthresh")
+    savefig(dir_path*"SetC/SetC"*name*" "*"_energy_distribution_below_psthresh")
 
 end
 
 if paranow ==arrparae
-    plot(variation_parae, arrayps,xlabel = "Q = $q excitation_low threshold",ylabel = "Percentage Positronium formed",label = "With recoil")
+    plot(variation_parae, arrayps,xlabel = " excitation_low threshold",ylabel = "Percentage Positronium formed",label = "With recoil")
     plot!(variation_parae, arraypsfalse,shape = :circle,label = "Without recoil")
-    savefig(dir_path*"SetC/SetC"*name*"Q = $q ")
+    savefig(dir_path*"SetC/SetC"*name*" ")
 
-    plot(variation_parae, arrayion,xlabel = "Q = $q excitation_low threshold",ylabel = "Number of events",label = "excitation_low With recoil")
+    plot(variation_parae, arrayion,xlabel = " excitation_low threshold",ylabel = "Number of events",label = "excitation_low With recoil")
     plot!(variation_parae, arrayelas,label = "Elastic With recoil/"*string(varfactor2))
     plot!(variation_parae, arrayionfalse,label = "excitation_low Without recoil",shape = :circle)
     plot!(variation_parae, arrayelasfalse,label = "Elastic Without recoil/"*string(varfactor3),shape = :circle)
-    savefig(dir_path*"SetC/SetC"*name*"Q = $q "*"_collisions")
+    savefig(dir_path*"SetC/SetC"*name*" "*"_collisions")
 
 
-    plot(variation_parae, arraythermalization_time,xlabel = "Q = $q excitation_low threshold",ylabel = "Time (years)",label = "Thermalization time")
+    plot(variation_parae, arraythermalization_time,xlabel = " excitation_low threshold",ylabel = "Time (years)",label = "Thermalization time")
     plot!(variation_parae, arraytimelow,label = "Time_low*"*string(varfactor)*" with recoil")
     plot!(variation_parae, arraytimelowfalse,label = "Time_low*"*string(varfactor)*" Without recoil",shape = :circle)
-    savefig(dir_path*"SetC/SetC"*name*"Q = $q "*"_times")
+    savefig(dir_path*"SetC/SetC"*name*" "*"_times")
 
     varsomething = Integer(length(arrayenergylow[:,1])/2)
-    histogram(arrayenergylow[varsomething,:],label="with recoil",xlabel = "Q = $q Energy(eV)",alpha = .5)
+    histogram(arrayenergylow[varsomething,:],label="with recoil",xlabel = " Energy(eV)",alpha = .5)
     histogram!(arrayenergylowfalse[varsomething,:],label="without recoil",alpha = .5)
-    savefig(dir_path*"SetC/SetC"*name*"Q = $q "*"_energy_distribution_on_forming_Ps")
+    savefig(dir_path*"SetC/SetC"*name*" "*"_energy_distribution_on_forming_Ps")
 
 
-    histogram(arrayenergylow[varsomething,arrayenergylow[varsomething,:].<varpsthresh],label="with recoil",xlabel = "Q = $q Energy(eV)",alpha = .5)
+    histogram(arrayenergylow[varsomething,arrayenergylow[varsomething,:].<varpsthresh],label="with recoil",xlabel = " Energy(eV)",alpha = .5)
     histogram!(arrayenergylowfalse[varsomething,arrayenergylowfalse[varsomething,:].<varpsthresh],label="without recoil",alpha = .5)
-    savefig(dir_path*"SetC/SetC"*name*"Q = $q "*"_energy_distribution_below_psthresh")
+    savefig(dir_path*"SetC/SetC"*name*" "*"_energy_distribution_below_psthresh")
 
 
 
