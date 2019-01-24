@@ -6,7 +6,6 @@ using LinearAlgebra
 using Dates
 using DelimitedFiles
 
-# using OtherFunctions
 
 function surge_exp(x::Float64,xth::Float64,varp,varlambda::Float64)
 
@@ -28,7 +27,7 @@ end
 
 
 function final_scattering_energy_and_direction!( Ei , sigma_temp,tempa ,vma,v1,vc,v2,g1,g2)
-    # println("Inside here")
+
 
     vma[1] = rand(Normal(0.0,sqrt(1.38e-23*tempa/1.67e-27)))
     vma[2] = rand(Normal(0.0,sqrt(1.38e-23*tempa/1.67e-27)))
@@ -94,25 +93,13 @@ function simulate( energy = 5000.0, N = 10000, para = rand(10); MMM::Int = 1 , d
 
 
 
-    # Not included as of now because at a time we only work with either high energy or low energy excitations
-    # Aexl = 0.0
-    # eexl = eexh
-    # lexl = 1.0
 
-
-
-
-    # println("------------------------------------------------------------------------")
-    # Astronomical data
-    # println("The density of ISM is : ",dens," Particles per meter cubed")  #particle per m^3           #density of ISM                     #right now it is CNM
-    # println("The temperature of ISM is : ",temp," Kelvin")   #in kelvin                    #temperature of ISM
 
 
 
     mass_ratio = 1/1835      #ratio of mass of the positron and molecule/atom
 
 
-    # rng = MersenneTwister(124)   #""" fixing the seed for some unknown reason """
 
 
 
@@ -146,8 +133,6 @@ function simulate( energy = 5000.0, N = 10000, para = rand(10); MMM::Int = 1 , d
     excount = 0   #"""counting total number of excitations """
     dirioncount = 0   #""" Counting total number of ionizations """
 
-    # Not relevant for the modelled data
-    #othcount = 0   #""" There were cases where nothing happened, i.e. all the cross sections at that energy ended up being 0, but this will lead to an infinite loop as our medium is infinite for now. These cases were checked for and this variable keeps track of these events """
 
     a = 0.0   #"""it will be used to temporarily store a randomly generated number """
     currene = energy   #""" A temporary variable to store the current energy  """
@@ -156,14 +141,6 @@ function simulate( energy = 5000.0, N = 10000, para = rand(10); MMM::Int = 1 , d
     thresholdps = 0.0   #""" Positronium cross_section """
     thresholdex = 0.0   #""" Excitation cross_section """
     thresholddi = 0.0   #""" Direct ionization cross_section """
-
-
-
-
-
-    # println("\n\nThe number of particles simulated is:   ",N)
-    # println("The mean energy is:  ",energy,"  eV")
-
 
 
 
@@ -176,9 +153,6 @@ function simulate( energy = 5000.0, N = 10000, para = rand(10); MMM::Int = 1 , d
     sigma = [0.0,0.0,0.0] # Will store the direction cosine
     velocity_vector = [.0,.0,.0] # Will hold the current velocity.
 
-    # position_vector = zeros(N,3) # Will be used to hold the final 3D position of the positrons before annhilation
-    # varposition_vector = zeros(3) # Will hold the current position vector because I am not sure if accesing array_ every time inside the while loop is efficient
-
 
     # The following parameters will be used in the calculation of the final scattering angle
     vma = @MVector zeros(3)
@@ -189,7 +163,6 @@ function simulate( energy = 5000.0, N = 10000, para = rand(10); MMM::Int = 1 , d
     g2 = @MVector zeros(3)
 
     stopping_energy = temp/1e4 # Approximately the thermal energy of the ISM particles. If energy falls below this it is assumed that the positron is thermalized.
-    # stopping_energy = temp/1e4   # Approximately the thermal energy of the ISM particles. If energy falls below this it is assumed that the positron is thermalized.
 
 
     if !elastic_present  # If elastic collisions are absent set the thershold energy to be the positron formation threshold otherwise the code may never stop.
@@ -198,7 +171,6 @@ function simulate( energy = 5000.0, N = 10000, para = rand(10); MMM::Int = 1 , d
 
     flag = true
     ps_formed_flag = false
-    dir_happened_flag = false
     arr_timelow = zeros(N) # Will store the time at which a positron either formed positronium or fell below the ps formation threshold.
     arr_energylow = zeros(N)  # Will store the energy at which a positron either formed positronium or fell below the ps formation threshold.
 
@@ -216,10 +188,6 @@ function simulate( energy = 5000.0, N = 10000, para = rand(10); MMM::Int = 1 , d
         sigma = arrinitial_sigma[i,:]  # A value of initial velocity is choosen
 
 
-        # Recursively calculating the average and storing information
-        # position_vector[i,:] = varposition_vector
-        # tempdist = sqrt(sum(varposition_vector.*varposition_vector))
-        # avgdist = (i-1)*avgdist/i + tempdist/i
 
         if ps_formed_flag == true
             only_ps_elascount += temp_elascount  # This is not the average, average will be found using combination of number of particles and ps formation %
@@ -227,16 +195,11 @@ function simulate( energy = 5000.0, N = 10000, para = rand(10); MMM::Int = 1 , d
 
         flag = true
         ps_formed_flag = false
-        dir_happened_flag = false
         temptime = 0.0
         temp_elascount = 0
 
 
         while currene >= stopping_energy   #""" Simulates life of a particle """
-
-
-
-            dir_happened_flag = false
 
 
 
@@ -249,21 +212,12 @@ function simulate( energy = 5000.0, N = 10000, para = rand(10); MMM::Int = 1 , d
             a = a*total_cross # Normalizing
 
 
-
-            #Warning:
-            #Do not use the same random number in tempvar and for checking the type of interaction else the correlation will give an additional 2% positron formation.
             v0 = sqrt((2*currene*1.6e-19)/(9.1e-31))  #velocity of positron in meter/second
 
             tempvar = -log(rand())/(total_cross*dens*1e-20)  # The distance covered before the next interaction
 
-            # varposition_vector = varposition_vector+sigma*tempvar     # Final 3D position
 
             temptime = temptime + tempvar/v0         # Time positron travelled for before the next _collision
-            ########################################################################################################################
-
-
-
-
 
 
             if a < thresholdps
@@ -274,15 +228,29 @@ function simulate( energy = 5000.0, N = 10000, para = rand(10); MMM::Int = 1 , d
                 break
             elseif a < (thresholdps + thresholddi)
                 dirioncount = dirioncount + 1
+
+                # -------------------------------------------------------------
+                # Uncomment the part below for using Q = pk
+                # -------------------------------------------------------------
+
                 # qqq = rand()
                 # ΔE = ((dirthresh/2)^(-1.1)*(1-qqq) + (currene - (dirthresh/2))^(-1.1)*qqq)^(1/(-1.1)) - (dirthresh/2)
                 # currene = currene - dirthresh - ΔE
+
+                # -------------------------------------------------------------
+
+
+
+                # -------------------------------------------------------------
+                # Uncomment the part below for using Q = some_number
+                # -------------------------------------------------------------
+
+
                 currene = currene - dirthresh
                 currene = currene*Q
-                dir_happened_flag = true
-                if currene  < 0.0
-                    println("SHOUT!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-                end
+
+                # -------------------------------------------------------------
+
 
             elseif a < (thresholdps + thresholddi + thresholdex)
                 excount = excount + 1   # This counts the number of excitations
@@ -299,7 +267,7 @@ function simulate( energy = 5000.0, N = 10000, para = rand(10); MMM::Int = 1 , d
 
 
 
-            # The following segment stores the distribution of positron energy as they fall below ps formation threshold (The same array also stores the energy at which positrons formed positronium (in the if section of ps formation).). A part of this information is used to generate the histograms.
+            # The following segment stores the distribution of positron energy as they fall below ps formation threshold (The same array also stores the energy at which positrons formed positronium (in the if section of ps formation).).
             # This is not storing the final energy of thermalized positrons.
             if flag && (currene < psthresh)
                 arr_energylow[i] = currene
@@ -327,28 +295,26 @@ function simulate( energy = 5000.0, N = 10000, para = rand(10); MMM::Int = 1 , d
     end
 
 
-    return (posfor)/N*100,dirioncount/N,only_non_ps_elascount,excount/N, only_ps_elascount/posfor,avgtime,mean(arr_timelow[arr_energylow .< psthresh]),mean(arr_energylow[arr_energylow .>psthresh]) # arr_energylow .>psthresh gives a bit array that has true for all positrons that formed positronium, similarly
+    return (posfor)/N*100,dirioncount/N,only_non_ps_elascount,excount/N, only_ps_elascount/posfor,avgtime,mean(arr_timelow[arr_energylow .< psthresh]),mean(arr_energylow[arr_energylow .>psthresh]) # ''arr_energylow .> psthresh'' gives a bit array that has true for all positrons that formed positronium
 end
 
 
 
 
-# Calling the function
-
 
 
 psformation = zeros(1) # To store ps formation percentage
-dir_path = "/home/himanshu/Desktop/graphdel/"
-q = 1.0
-particles = 5000*15*30
+# dir_path = "/home/himanshu/Desktop/graphdel/"
+particles = 5000*15*1
 varenergy = 10000
 vardensity = 3.5e7
 vartemp = 75.0
 
 
 
+q = 0.990
 #para = [Aelas, Aion, eion, lion, Apsf, epsf, lpsf, Aexh, eexh, lexh]
-para = [0.40,0.30,13.6,30.0,1.0,6.8,7.0,1.0,2.0,20.0]
+para = [0.40,0.30,13.6,30.0,1.0,6.8,7.0,0.0,10.0,20.0]
 varpsthresh = para[6]
 
 
@@ -363,18 +329,18 @@ varenergy_ps = 0.0
 
 @time varps,varion,varelas,varexc,varpselas, varthermalization_time,vartime_ps,varenergy_ps=simulate(varenergy , particles, para, MMM = 1 , dens = vardensity, temp = vartemp, Q=q,elastic_present=true)
 
-folder_path = "/home/himanshu/Desktop/julia_data/setB/"*string(Dates.now())
-mkdir(folder_path)
-file = open(folder_path*"/with_elastic_Q=0.5.txt","a")
+# folder_path = "/home/himanshu/Desktop/julia_data/setB/"*string(Dates.now())
+# mkdir(folder_path)
+# file = open(folder_path*"/with_elastic_Q=0.5.txt","a")
 
 
 scaled_time1 = varthermalization_time*vardensity/1e15
 scaled_time2 = vartime_ps*vardensity/1e15
 
 
-writedlm(file,hcat(100-varps,scaled_time2,varion,varpselas,varexc,varenergy_ps,varelas,scaled_time1))
+# writedlm(file,hcat(100-varps,scaled_time2,varion,varpselas,varexc,varenergy_ps,varelas,scaled_time1))
 
-println(100-varps," ",scaled_time2," ",varion," ",varpselas," ",varexc," ",varenergy_ps)
+println(100-varps,", ",scaled_time2,", ",varion,", ",varpselas,", ",varexc,", ",varenergy_ps)
 
 
 
