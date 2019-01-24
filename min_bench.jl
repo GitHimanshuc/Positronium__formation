@@ -274,32 +274,28 @@ function simulate( energy = 5000.0, N = 10000, para = rand(10); MMM::Int = 1 , d
                 break
             elseif a < (thresholdps + thresholddi)
                 dirioncount = dirioncount + 1
-                qqq = rand()
-                ΔE = ((dirthresh/2)^(-1.1)*(1-qqq) + (currene - (dirthresh/2))^(-1.1)*qqq)^(1/(-1.1)) - (dirthresh/2)
-                currene = currene - dirthresh - ΔE
-                # currene = currene - dirthresh
+                # qqq = rand()
+                # ΔE = ((dirthresh/2)^(-1.1)*(1-qqq) + (currene - (dirthresh/2))^(-1.1)*qqq)^(1/(-1.1)) - (dirthresh/2)
+                # currene = currene - dirthresh - ΔE
+                currene = currene - dirthresh
+                currene = currene*Q
                 dir_happened_flag = true
                 if currene  < 0.0
                     println("SHOUT!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                 end
 
             elseif a < (thresholdps + thresholddi + thresholdex)
-                excount = excount + 1
+                excount = excount + 1   # This counts the number of excitations
                 currene = currene - exthresh
+
             else
                 collcount = collcount + 1    # This counts the number of elastic collision
-                # There is no energy loss due to elastic collision until elastic_present is set to True
+                currene = final_scattering_energy_and_direction!(currene,sigma,temp,vma,v1,vc,v2,g1,g2) # Right now we are using the isotropic scattering case.
                 temp_elascount += 1
             end
 
 
-            if elastic_present && !dir_happened_flag
-                # If elastic_present is set to True then every collision event (ionization/excitations) is also treated as an elastic collision and energy loss takes place. But these collision are not counted as elastic collision/collcount is not incremented.
-                currene = final_scattering_energy_and_direction!(currene,sigma,temp,vma,v1,vc,v2,g1,g2) # Right now we are using the isotropic scattering case.
-            else
-                # If elastic_present is False but we want to track 3D movement then the following line can be uncommented. This will not change the energy but the direction cosine will be updated.
-                # final_scattering_energy_and_direction!(currene,sigma,temp,vma,v1,vc,v2,g1,g2)
-            end
+
 
 
 
@@ -344,7 +340,7 @@ end
 psformation = zeros(1) # To store ps formation percentage
 dir_path = "/home/himanshu/Desktop/graphdel/"
 q = 1.0
-particles = 5000*15
+particles = 5000*15*30
 varenergy = 10000
 vardensity = 3.5e7
 vartemp = 75.0
@@ -352,7 +348,7 @@ vartemp = 75.0
 
 
 #para = [Aelas, Aion, eion, lion, Apsf, epsf, lpsf, Aexh, eexh, lexh]
-para = [0.40,0.30,13.6,30.0,1.0,6.8,7.0,1.40,2.0,10.0]
+para = [0.40,0.30,13.6,30.0,1.0,6.8,7.0,1.0,2.0,20.0]
 varpsthresh = para[6]
 
 
